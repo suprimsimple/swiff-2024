@@ -1,6 +1,6 @@
 {
   "name": "swiff-4",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "main": "build/bundle.js",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
@@ -8,9 +8,11 @@
     "@babel/cli": "^7.24.1",
     "@babel/core": "^7.24.4",
     "@babel/preset-react": "^7.24.1",
+    "@rollup/plugin-json": "^6.1.0",
     "rollup": "^4.14.3"
   },
   "scripts": {
+    "start": "node build/bundle.js",
     "bundle": "rollup ./dist/index.js --file build/bundle.js",
     "compile": "babel src --out-dir dist",
     "build": "npm run compile && npm run bundle",
@@ -24,11 +26,14 @@
     "command-line-tool",
     "command-line-app",
     "staging-tool"
-],
+  ],
+  "bugs": {
+    "url": "https://github.com/burgerbuds/swiff/issues"
+  },
   "homepage": "https://github.com/burgerbuds/swiff#readme",
   "bin": {
     "swiff-4": "build/bundle.js"
-},
+  },
   "dependencies": {
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
@@ -42,6 +47,7 @@
     "node-ssh": "^13.1.0",
     "promise-mysql": "^5.2.0",
     "react": "^18.2.0",
+    "update-notifier": "^7.0.0",
     "username": "^7.0.0"
   }
 }

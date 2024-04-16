@@ -1,3 +1,4 @@
+import json from "@rollup/plugin-json";
 export default {
   input: "dist/index.js",
   output: {
@@ -5,4 +6,5 @@ export default {
     format: "cjs",
   },
   external: ["react", "ink", "ink-select-input", "ink-tab", "chalk"],
+  plugins: [json()],
 };

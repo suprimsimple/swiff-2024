@@ -6,10 +6,11 @@ import { Tabs, Tab } from "ink-tab";
 import Spinner from 'ink-spinner'
 import chalk from "chalk"
 import {username as resolveUsername} from 'username'
-import { hexDefault, hexHighlight, hexMuted, hexNotice } from "./colors";
+import { colourHighlight, hexDefault, hexHighlight, hexMuted, hexNotice } from "./colors";
 import { doesFileExist, executeCommands, isEmpty } from "./utils";
 import { createConfig, getConfig, pathConfigs, setupConfig } from "./config";
 import { setupLocalEnv } from "./env";
+
 
 const ItemComponent = ({
   value: id,
@@ -291,5 +292,39 @@ const App = () => {
     </>
   );
 };
+
+
+
+// Start with a blank slate
+console.clear()
+
+
+const taskHelp = (isVerbose = false) => `
+${
+    isVerbose
+        ? `💁  Run ${colourHighlight(
+              'swiff'
+          )} within your project root for an interactive interface.\nOtherwise use the following commands to quickly run a task:`
+        : `Try one of the following flags:`
+}\n}`
+
+
+
+
+// Catch unhandled rejections
+process.on('unhandledRejection', reason => {
+  process.exit()
+})
+
+// Catch uncaught exceptions
+process.on('uncaughtException', error => {
+  fs.writeSync(1, `${chalk.red(error)}\n\n`)
+})
+
+// End process on ctrl+c or ESC
+process.stdin.on('data', key => {
+  if (['\u0003', '\u001B'].includes(key)) process.exit()
+})
+
 
 render(<App />);
