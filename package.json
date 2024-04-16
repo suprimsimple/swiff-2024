@@ -1,5 +1,6 @@
 {
   "name": "swiff-4",
+  "version": "1.0.0",
   "type": "module",
   "main": "index.js",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
@@ -16,6 +17,18 @@
     "postbuild": "node build/bundle.js",
     "prepublish": "npm run build"
   },
+  "keywords": [
+    "developer-tools",
+    "development-environment",
+    "web-tools",
+    "command-line-tool",
+    "command-line-app",
+    "staging-tool"
+],
+  "homepage": "https://github.com/burgerbuds/swiff#readme",
+  "bin": {
+    "swiff-4": "build/index.js"
+},
   "dependencies": {
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
