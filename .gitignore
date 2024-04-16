@@ -1,0 +1,4 @@
+/build
+/dist
+/.pracel-cache
+/node_modules
