@@ -1,9 +1,12 @@
 import fs from "fs-extra";
-import * as _ from "lodash";
+import get from "lodash.get";
 import path from "path";
-import { fileURLToPath } from "url";
-import { resolveApp } from "./utils";
-
+import { fileURLToPath } from "node:url";
+import { appDirectory, resolveApp } from "./utils";
+import { createRequire } from "node:module";
+import { isEmpty } from "lodash-es";
+import { colourNotice } from "./colors";
+const require = createRequire(import.meta.url);
 export const configFileName = "swiff.config.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,13 +39,18 @@ const setupConfig = async (hasNewConfig, isInteractive) => {
 };
 
 const getConfig = async () => {
-  // Make sure we pull a config freshie if user happens to update the options
-  delete require.cache[require.resolve(pathConfigs.pathConfig)];
-  // Load the user config and extract data
-  const config = await new Promise((resolve) =>
-    resolve(require(pathConfigs.pathConfig))
-  );
-  return config;
+  try {
+    const cacheBuster = Date.now();
+    const configPath = `${path.resolve(
+      appDirectory,
+      configFileName
+    )}?cacheBuster=${cacheBuster}`; // Removes cache get fresh config
+    const configModule = await import(configPath);
+    return configModule.default;
+  } catch (error) {
+    console.error("Error loading config:", error);
+    throw error;
+  }
 };
 
 // Check that the required config settings exist
@@ -56,8 +64,7 @@ const getConfigIssues = (config, hasNewConfig, isInteractive = false) => {
   // Loop over the array and match against the keys in the users config
   const missingSettings = requiredSettings.filter(
     (setting) =>
-      _.get(config, setting) === undefined ||
-      _.get(config, setting).length === 0
+      get(config, setting) === undefined || get(config, setting).length === 0
   );
   // Return the error if any
   return !isEmpty(missingSettings)

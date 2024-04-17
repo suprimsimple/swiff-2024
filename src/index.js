@@ -3,67 +3,16 @@ import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import SelectInput from "ink-select-input";
 import { Tabs, Tab } from "ink-tab";
-import Spinner from 'ink-spinner'
 import chalk from "chalk"
 import {username as resolveUsername} from 'username'
-import { colourHighlight, hexDefault, hexHighlight, hexMuted, hexNotice } from "./colors";
+import { colourHighlight, hexHighlight, hexNotice } from "./colors";
 import { doesFileExist, executeCommands, isEmpty } from "./utils";
 import { createConfig, getConfig, pathConfigs, setupConfig } from "./config";
 import { setupLocalEnv } from "./env";
+import ItemComponent from "./components/ItemComponent";
+// Start with a blank slate
+console.clear();
 
-
-const ItemComponent = ({
-  value: id,
-  label: title,
-  description,
-  isSelected,
-  currentTask,
-  isDisabled,
-}) => {
-  const isActive =
-    currentTask && currentTask.title === title && isTaskRunning(messages);
-  const normalColor = isSelected ? hexHighlight : hexDefault;
-  return (
-    <React.Fragment>
-      <Text bold color={normalColor}>
-        {`${title}`}
-      </Text>
-      <Text bold={false} color={hexMuted}>
-        {description ? `: ${description}` : ""}
-      </Text>
-    </React.Fragment>
-  );
-};
-
-const MessageTemplate = ({ messages, isFlaggedStart }) => (
-  <Box flexDirection="column">
-      {!isEmpty(messages) &&
-          messages.map(({ text, type }, i) => (
-              <Box key={`msg${i}`}>
-                  {type === 'heading' && !isFlaggedStart && (
-                      <Box marginBottom={1}>
-                          <Text bold>{`—— ${text} ——`}</Text>
-                      </Box>
-                  )}
-                  {type === 'heading' && isFlaggedStart && (
-                      <Text bold>{`${text}\n`}</Text>
-                  )}
-                  <Text dim={messages.length - 1 !== i}>
-                      {type === 'error' && `💩  ${text}`}
-                      {type === 'success' && `👌  ${text}`}
-                      {type === 'message' && `💁‍  ${text}`}
-                      {type === 'working' &&
-                          (messages.length - 1 === i ? (
-                              <Spinner type="runner" />
-                          ) : (
-                              `🏃 `
-                          ))}
-                      {type === 'working' && ` ${text}`}
-                  </Text>
-              </Box>
-          ))}
-  </Box>
-)
 
 const App = () => {
   const [message,setMessage] = useState(null);
@@ -71,7 +20,7 @@ const App = () => {
   const [isFlaggedStart,setisFlaggedStart] = useState(false)
   const [activeTab, setActiveTab] = useState("");
   const [currentTask, setCurrenTask] = useState(null);
-  const [config, setConfig] = useState({
+  const [stateconfig, setConfig] = useState({
     environment:"staging"
   });
 
@@ -128,9 +77,9 @@ const App = () => {
     setActiveTab(name);
   };
   const isDisabled = (taskId) =>
-    config && config.disabled && config.disabled.includes(taskId);
+  stateconfig && stateconfig.disabled && stateconfig.disabled.includes(taskId);
 
-  const  handleSetup = async () => {
+  const handleSetup = async () => {
       // Check if the config exists
       const doesConfigExist = await doesFileExist(pathConfigs.pathConfig)
       // If no config, create it
@@ -175,9 +124,9 @@ const App = () => {
       // Check the users SSH key has been added to the server
       const checkSshSetup = await executeCommands(
           getSshTestCommand(
-              config[`${config.environment}`].server.user,
-              config[`${config.environment}`].server.host,
-              config[`${config.environment}`].server.port,
+              stateconfig[`${stateconfig.environment}`].server.user,
+              stateconfig[`${stateconfig.environment}`].server.host,
+              stateconfig[`${stateconfig.environment}`].server.port,
               !isEmpty(localEnv.SWIFF_CUSTOM_KEY)
                   ? localEnv.SWIFF_CUSTOM_KEY
                   : null
@@ -187,11 +136,11 @@ const App = () => {
       if (checkSshSetup instanceof Error) {
           return setMessage(
               `A SSH connection couldn’t be made with these details:\n\nServer host: ${
-                  config[`${config.environment}`].server.host
-              }\nServer user: ${config[`${config.environment}`].server.user}\nPort: ${
-                  config[`${config.environment}`].server.port
+                  stateconfig[`${stateconfig.environment}`].server.host
+              }\nServer user: ${stateconfig[`${stateconfig.environment}`].server.user}\nPort: ${
+                  stateconfig[`${stateconfig.environment}`].server.port
               }\nSSH key: ${sshKey}\n\n${getSshCopyInstructions(
-                  config[`${config.environment}`],
+                  stateconfig[`${stateconfig.environment}`],
                   sshKey
               )}\n\n${
                   isEmpty(localEnv.SWIFF_CUSTOM_KEY)
@@ -209,30 +158,30 @@ const App = () => {
     // Cheack Config
     await  handleSetup()
   };
+
+
   useEffect(()=>{
    (async()=>{
-      // Setup Config
       const doesConfigExist = await doesFileExist(pathConfigs.pathConfig);
       if (doesConfigExist) {
-        const { disabled, environment } = await getConfig();
-        if (disabled){
-          setConfig({ 
-            ...config,
-            environment: environment ?? "staging", disabled: disabled })
+        try {
+          const { disabled, environment } = await getConfig();
+          if (disabled){
+             setConfig({ ...stateconfig, environment: environment ?? "staging", disabled: disabled })
+          }
+        } catch (error) {
+          console.log(error)
         }
-      }else{
-       return
+     
       }
    })()
-
   },[])
   return (
     <>
       <Box marginBottom={1} flexDirection="column">
         <Text color={hexHighlight}>Welcome to Swiff 2024! Please select a task:</Text>
-        <Text color="#ffffff">!! Environment: <Text bold color={hexNotice}> {config?.environment} </Text></Text>
+        <Text color="#ffffff">!! Environment: <Text bold color={hexNotice}> {stateconfig?.environment} </Text></Text>
       </Box>
-
       <Box flexDirection="column">
         <Tabs
           onChange={handleTabChange}
@@ -295,8 +244,7 @@ const App = () => {
 
 
 
-// Start with a blank slate
-console.clear()
+
 
 
 const taskHelp = (isVerbose = false) => `
@@ -308,23 +256,20 @@ ${
         : `Try one of the following flags:`
 }\n}`
 
+// // Catch unhandled rejections
+// process.on('unhandledRejection', reason => {
+//   process.exit()
+// })
 
-
-
-// Catch unhandled rejections
-process.on('unhandledRejection', reason => {
-  process.exit()
-})
-
-// Catch uncaught exceptions
-process.on('uncaughtException', error => {
-  fs.writeSync(1, `${chalk.red(error)}\n\n`)
-})
+// // Catch uncaught exceptions
+// process.on('uncaughtException', error => {
+//   fs.writeSync(1, `${chalk.red(error)}\n\n`)
+// })
 
 // End process on ctrl+c or ESC
-process.stdin.on('data', key => {
-  if (['\u0003', '\u001B'].includes(key)) process.exit()
-})
-
+// process.stdin.on('data', key => {
+//   if (['\u0003', '\u001B'].includes(key)) process.exit()
+// })
+// updateNotifier({ pkg }).notify()
 
 render(<App />);

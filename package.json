@@ -1,22 +1,25 @@
 {
   "name": "swiff-4",
-  "version": "1.0.4",
+  "version": "1.1.2",
+  "main": "build/index.js",
   "type": "module",
-  "main": "build/bundle.js",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
   "devDependencies": {
     "@babel/cli": "^7.24.1",
     "@babel/core": "^7.24.4",
     "@babel/preset-react": "^7.24.1",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "rollup": "^4.14.3"
   },
   "scripts": {
-    "start": "node build/bundle.js",
-    "bundle": "rollup ./dist/index.js --file build/bundle.js",
-    "compile": "babel src --out-dir dist",
-    "build": "npm run compile && npm run bundle",
-    "postbuild": "node build/bundle.js",
+    "start": "node build/index.js",
+    "compile-bundle": "rollup -c",
+    "build": "npm run compile-bundle",
+    "postbuild": "node build/index.js",
+    "prebuild": "rm -rf build",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -32,7 +35,7 @@
   },
   "homepage": "https://github.com/burgerbuds/swiff#readme",
   "bin": {
-    "swiff-4": "build/bundle.js"
+    "swiff-4": "build/index.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
@@ -43,6 +46,8 @@
     "ink-tab": "^5.0.0",
     "ink-task-list": "^2.0.0",
     "loadash": "^1.0.0",
+    "lodash-es": "^4.17.21",
+    "lodash.get": "^4.4.2",
     "node-cmd": "^5.0.0",
     "node-ssh": "^13.1.0",
     "promise-mysql": "^5.2.0",

@@ -1,6 +1,6 @@
 import path from "path";
 import { promisify } from "util";
-import * as _ from "lodash";
+import { isEmpty } from "lodash-es";
 import fs from "fs-extra";
 import { exec } from "child_process";
 import * as cmd from "node-cmd";
@@ -8,9 +8,8 @@ import { colourHighlight, colourAttention } from "./colors";
 const execPromise = promisify(exec);
 const cmdPromise = cmd;
 
-const isEmpty = _.isEmpty;
 // Make sure any symlinks in the project folder are resolved
-const appDirectory = fs.realpathSync(process.cwd());
+export const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 
 // Execute bash commands
@@ -56,7 +55,7 @@ const getMissingPaths = async (suppliedPaths, configSetting) => {
           hasMultipleResults ? "those folders" : "the folder"
         } or adjust the ${colourAttention(
           configSetting
-        )} values in your ${colourAttention("swiff.config.cjs")}`
+        )} values in your ${colourAttention("swiff.config.js")}`
       )
     : [];
 };
@@ -70,7 +69,7 @@ const validatePushFolderOptions = (suppliedPaths, configSetting) => {
       return new Error(
         `Only 'path' and 'exclude' key is supported in push folders setting. Adjust the ${colourAttention(
           configSetting
-        )} values in your ${colourAttention("swiff.config.cjs")}`
+        )} values in your ${colourAttention("swiff.config.js")}`
       );
     }
   });
