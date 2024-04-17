@@ -10,16 +10,18 @@ const ItemComponent = ({
   isDisabled,
 }) => {
   const isActive =
-    currentTask && currentTask.title === title && isTaskRunning(messages);
+    currentTask && currentTask?.title === title && isTaskRunning(messages);
   const normalColor = isSelected ? hexHighlight : hexDefault;
   return (
     <React.Fragment>
       <Text bold color={normalColor}>
         {`${title}`}
       </Text>
-      <Text bold={false} color={hexMuted}>
-        {description ? `: ${description}` : ""}
-      </Text>
+      {description && (
+        <Text bold={false} color={hexMuted}>
+          {description ? `: ${description}` : ""}
+        </Text>
+      )}
     </React.Fragment>
   );
 };

@@ -5,10 +5,10 @@
 
 // Remote SSH server details
 export default {
-  // Environment  staging and production
+  // Environment  staging, production, etc !make sure server consits server with environment name
   environment: "staging",
-  staging: {
-    server: {
+  server: {
+    staging: {
       // The SSH login username
       user: "",
       // The IP/hostname of the remote server
@@ -20,9 +20,7 @@ export default {
       // The SSH port to connect on (22 is the SSH default)
       port: 22,
     },
-  },
-  production: {
-    server: {
+    production: {
       // The SSH login username
       user: "",
       // The IP/hostname of the remote server

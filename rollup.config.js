@@ -37,5 +37,7 @@ export default {
     "username",
     "update-notifier",
     "fs-extra",
+    "ink-big-text",
+    "ink-gradient",
   ],
 };

@@ -5,24 +5,22 @@
 
 // Remote SSH server details
 export default {
-  // Environment  staging and production
-  environment: "staging",
-  staging: {
-    server: {
+  // Environment  staging, production, etc !make sure server consits server with environment name
+  environment: "production",
+  server: {
+    staging: {
       // The SSH login username
-      user: "",
+      user: "sterlinghomes",
       // The IP/hostname of the remote server
       // host: '100.100.100.100',
-      host: "",
+      host: "139.180.178.70",
       // The working directory of the remote app folder
       // appPath: '/srv/users/[user]/apps/[app]',
-      appPath: "",
+      appPath: "/srv/users/sterlinghomes/apps/sterlinghomes",
       // The SSH port to connect on (22 is the SSH default)
       port: 22,
     },
-  },
-  production: {
-    server: {
+    production: {
       // The SSH login username
       user: "",
       // The IP/hostname of the remote server

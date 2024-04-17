@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import SelectInput from "ink-select-input";
 import { Tabs, Tab } from "ink-tab";
+import Gradient from 'ink-gradient';
+import BigText from 'ink-big-text';
 import chalk from "chalk"
 import {username as resolveUsername} from 'username'
 import { colourHighlight, hexHighlight, hexNotice } from "./colors";
@@ -15,16 +17,16 @@ console.clear();
 
 
 const App = () => {
+  const [loadconfig, setloadconfig]  = useState(false);
   const [message,setMessage] = useState(null);
   const [locaEnv,setLocalEnv] = useState(null)
   const [isFlaggedStart,setisFlaggedStart] = useState(false)
   const [activeTab, setActiveTab] = useState("");
   const [currentTask, setCurrenTask] = useState(null);
-  const [stateconfig, setConfig] = useState({
-    environment:"staging"
-  });
-
-
+  const [envOptions,setEnvOptions] = useState([]);
+  const [stateconfig, setConfig] = useState(null);
+  const [selectedEnv, setselectedEnv] = useState(false)
+  const [selectedEnvIndex, setselectedEnvIndex] = useState(0)
   const pullitems = [
     {
       label: "Folder Pull",
@@ -77,7 +79,7 @@ const App = () => {
     setActiveTab(name);
   };
   const isDisabled = (taskId) =>
-  stateconfig && stateconfig.disabled && stateconfig.disabled.includes(taskId);
+  stateconfig && stateconfig?.disabled && stateconfig?.disabled.includes(taskId);
 
   const handleSetup = async () => {
       // Check if the config exists
@@ -159,15 +161,30 @@ const App = () => {
     await  handleSetup()
   };
 
+  const handleSelectEnv = async(value)=>{
+    setselectedEnv(true);
+    setConfig({
+      ...stateconfig,
+      environment: value
+    })
+  }
+
 
   useEffect(()=>{
    (async()=>{
       const doesConfigExist = await doesFileExist(pathConfigs.pathConfig);
       if (doesConfigExist) {
         try {
-          const { disabled, environment } = await getConfig();
-          if (disabled){
-             setConfig({ ...stateconfig, environment: environment ?? "staging", disabled: disabled })
+          const config = await getConfig();
+          if(config){
+            setConfig(config);
+            setselectedEnv(false)
+            const mapEvns = Object.keys(config?.server).map(key => ({
+                label: key.charAt(0).toUpperCase() + key.slice(1), 
+                value: key,
+                isSelected: key == `${config?.environment}` ?? false
+              }))
+              setEnvOptions(mapEvns.sort((a,b)=>  b.isSelected - a.isSelected));
           }
         } catch (error) {
           console.log(error)
@@ -176,68 +193,103 @@ const App = () => {
       }
    })()
   },[])
+
   return (
     <>
       <Box marginBottom={1} flexDirection="column">
-        <Text color={hexHighlight}>Welcome to Swiff 2024! Please select a task:</Text>
-        <Text color="#ffffff">!! Environment: <Text bold color={hexNotice}> {stateconfig?.environment} </Text></Text>
+        <Gradient name="vice" >
+          <BigText text="Swiff 2024"/>
+        </Gradient>
+        <Text color="#ffffff"> <Text>🤌  </Text> Environment: 
+           <Text bold color={hexNotice} > {stateconfig?.environment} | 
+           {stateconfig && stateconfig['server'] && 
+            stateconfig['server'][`${stateconfig?.environment}`] && 
+           ` ${stateconfig['server'][`${stateconfig?.environment}`]?.user != "" ? stateconfig['server'][`${stateconfig?.environment}`]?.user : " USER" }@${stateconfig['server'][`${stateconfig?.environment}`]?.host != "" ? stateconfig['server'][`${stateconfig?.environment}`]?.host : "HOST" } ` }   </Text> </Text>
       </Box>
+      {!selectedEnv && 
+          <Box flexDirection="column">
+          <Text color="#ffffff"> <Text>✅ </Text> Select an Environment: </Text>
+            <Box marginLeft={4} marginTop={0.3}>
+             <SelectInput
+                items={envOptions}
+                indicatorComponent={({isSelected})=>isSelected ? <Text color={hexHighlight}> {`>`} </Text> : <Text> {` `} </Text>}
+                itemComponent={(props) => (
+                  <ItemComponent
+                    currentTask={currentTask}
+                    isDisabled={() => isDisabled(props.value)}
+                    isSelected={false}
+                    {...props}
+                  />
+                )}
+                onSelect={({value})=> handleSelectEnv(value)}
+              />
+            </Box>
+          </Box>
+      }
+   
+      {selectedEnv && 
+      
       <Box flexDirection="column">
-        <Tabs
-          onChange={handleTabChange}
-          colors={{
-            activeTab: {
-              color: "transparent",
-              backgroundColor: hexHighlight,
-            },
-          }}
-        >
-          <Tab name="pull">Pull</Tab>
-          <Tab name="push">Push</Tab>
-          <Tab name="backs">Terminal/Backups</Tab>
-        </Tabs>
-        <Box marginTop={1}>
-          {activeTab === "pull" && (
-            <SelectInput
-              items={pullitems}
-              itemComponent={(props) => (
-                <ItemComponent
-                  currentTask={currentTask}
-                  isDisabled={() => isDisabled(props.value)}
-                  {...props}
-                />
-              )}
-              onSelect={handleSelect}
-            />
-          )}
-          {activeTab === "push" && (
-            <SelectInput
-              items={pushitems}
-              itemComponent={(props) => (
-                <ItemComponent
-                  currentTask={currentTask}
-                  isDisabled={() => isDisabled(props.value)}
-                  {...props}
-                />
-              )}
-              onSelect={handleSelect}
-            />
-          )}
-          {activeTab === "backs" && (
-            <SelectInput
-              items={backsitems}
-              itemComponent={(props) => (
-                <ItemComponent
-                  currentTask={currentTask}
-                  isDisabled={() => isDisabled(props.value)}
-                  {...props}
-                />
-              )}
-              onSelect={handleSelect}
-            />
-          )}
-        </Box>
+      <Tabs
+        onChange={handleTabChange}
+        colors={{
+          activeTab: {
+            color: "transparent",
+            backgroundColor: hexHighlight,
+          },
+        }}
+      >
+        <Tab name="pull" ><Text underline={activeTab == "pull"}>Pull</Text></Tab>
+        <Tab name="push" ><Text underline={activeTab == "push"}>Push</Text> </Tab>
+        <Tab name="backs"><Text  underline={activeTab == "backs"}>Terminal/Backups</Text></Tab>
+      </Tabs>
+      <Box marginTop={1}>
+        {activeTab === "pull" && (
+          <SelectInput
+            items={pullitems}
+            indicatorComponent={({isSelected})=>isSelected ? <Text color={hexHighlight}> {`>`} </Text> : <Text> {` `} </Text>}
+            itemComponent={(props) => (
+              <ItemComponent
+                currentTask={currentTask}
+                isDisabled={() => isDisabled(props.value)}
+                {...props}
+              />
+            )}
+            onSelect={handleSelect}
+          />
+        )}
+        {activeTab === "push" && (
+          <SelectInput
+            items={pushitems}
+            indicatorComponent={({isSelected})=>isSelected ? <Text color={hexHighlight}> {`>`} </Text> : <Text> {` `} </Text>}
+            itemComponent={(props) => (
+              <ItemComponent
+                currentTask={currentTask}
+                isDisabled={() => isDisabled(props.value)}
+                {...props}
+              />
+            )}
+            onSelect={handleSelect}
+          />
+        )}
+        {activeTab === "backs" && (
+          <SelectInput
+            items={backsitems}
+            indicatorComponent={({isSelected})=>isSelected ? <Text color={hexHighlight}> {`>`} </Text> : <Text> {` `} </Text>}
+            itemComponent={(props) => (
+              <ItemComponent
+                currentTask={currentTask}
+                isDisabled={() => isDisabled(props.value)}
+                {...props}
+              />
+            )}
+            onSelect={handleSelect}
+          />
+        )}
       </Box>
+    </Box>
+      }
+
     </>
   );
 };
