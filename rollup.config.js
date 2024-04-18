@@ -40,7 +40,6 @@ export default {
     "ink-big-text",
     "child_process",
     "cli-spinners",
-    "ink-gradient",
     "node-ssh",
   ],
 };

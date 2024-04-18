@@ -41,6 +41,6 @@ export default {
     // 'public/assets/build'
   ],
   // Folders to pull new or changed files from
-  pullFolders: ["public/assets/volumes"],
+  pullFolders: [],
   disabled: ["databasePush"],
 };

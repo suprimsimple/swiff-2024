@@ -1,4 +1,5 @@
 import { NodeSSH } from "node-ssh";
+import dotenv from "dotenv";
 import { username as resolveUsername } from "username";
 import path from "path";
 import chalk from "chalk";
@@ -55,7 +56,7 @@ const sshConnect = async ({ host, username, port, sshKeyPath }) => {
       host: host,
       username: username,
       port: port,
-      privateKey: sshKeyResolvedPath,
+      privateKeyPath: sshKeyResolvedPath,
     })
     .catch((error) => (errorMessage = error));
   if (errorMessage)

@@ -5,6 +5,7 @@ import chalk from "chalk";
 import { exec } from "child_process";
 import SelectInput from "ink-select-input";
 import { username as resolveUsername } from "username";
+import path from "path";
 import {
   commaAmpersander,
   doesFileExist,
@@ -13,6 +14,7 @@ import {
   replaceRsyncOutput,
 } from "../utils";
 import {
+  configFileName,
   createConfig,
   getConfig,
   getConfigIssues,
@@ -23,6 +25,7 @@ import { getRemoteEnv, setupLocalEnv } from "../env";
 import ItemComponent from "./ItemComponent";
 import {
   colourAttention,
+  colourDefault,
   colourHighlight,
   colourMuted,
   colourNotice,
@@ -30,11 +33,11 @@ import {
 } from "../colors";
 import MessageTemplate from "./MessageTemplate";
 import { getSshPullCommands, getSshTestCommand } from "../ssh";
+import CustomSelectTaskInput from "./CustomSelectTaskInput";
 // Get the latest task status to check if running
 const isTaskRunning = (messages) => {
   const currentMessage =
     messages && messages.length > 0 && messages?.slice(-1)?.pop();
-  console.log(messages);
   return currentMessage ? currentMessage.type === "working" : false;
 };
 
@@ -45,6 +48,7 @@ const TaskFunctions = {
     stateremoteEnv,
     statelocalEnv,
     handlesetWorking,
+    isFlaggedStart,
   }) => {
     const { pullFolders, environment } = stateconfig;
     const { user, host, appPath, port } = stateconfig.server[`${environment}`]; // get Env
@@ -61,7 +65,7 @@ const TaskFunctions = {
       );
     }
     // Remove empty values from the array so the user can’t accidentally download the entire remote
-    const filteredPullFolders = pullFolders.filter((i) => i);
+    const filteredPullFolders = pullFolders?.filter((i) => i);
     // Share what's happening with the user
     handlesetWorking(
       `Pulling files from ${commaAmpersander(filteredPullFolders)}`
@@ -79,20 +83,21 @@ const TaskFunctions = {
 
     // Get the remote env file via SSH
     const remoteEnv = await getRemoteEnv({
-      serverConfig: server,
+      serverConfig: stateconfig.server[`${environment}`],
       isInteractive: isFlaggedStart,
       sshKeyPath: statelocalEnv?.SWIFF_CUSTOM_KEY,
     });
 
     // If the env can't be found then show a message
     if (remoteEnv instanceof Error) {
-      handlesetWorking(
+      return handlesetMessage(
         colourNotice(
           `Consider adding an .env file on the remote server\n   at ${path.join(
-            stateconfig.server[`${stateconfig.environment}`].appPath,
+            stateconfig?.server[`${stateconfig.environment}`]?.appPath,
             ".env"
           )}`
-        )
+        ),
+        "error"
       );
     }
     // Set the name of the remote environment
@@ -121,7 +126,7 @@ const TaskFunctions = {
     return handlesetMessage(
       isEmpty(output)
         ? `No pull required, ${colourHighlight(
-            statelocalEnv.DB_SERVER
+            remoteEnv?.DB_SERVER
           )} is already up-to-date!`
         : `Success! These are the local files that changed:\n${output}\n\nThe file pull${
             !isEmpty(remoteEnvironment)
@@ -141,7 +146,6 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
   const [activeTab, setActiveTab] = useState("");
   const [currentTask, setCurrenTask] = useState(null);
   const [isFlaggedStart, setisFlaggedStart] = useState(false);
-
   const handleSetup = async () => {
     try {
       const isInteractive = !isFlaggedStart;
@@ -175,7 +179,7 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
       // If there's anything wrong with the env then return an error
       if (localEnv instanceof Error) return handlesetMessage(localEnv, "error");
       // Add the env to the global state
-      setLocalEnv({ localEnv });
+      setLocalEnv(localEnv);
       // Get the users key we'll be using to connect with
       const user = await resolveUsername();
       // Check if the key file exists
@@ -235,13 +239,11 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
       return false;
     }
   };
-
   const handleEndTask = () => {
     if (!isTaskRunning(messages) && isFlaggedStart) {
       setTimeout(() => process.exit(), 500);
     }
   };
-
   const handlesetMessage = (message, type = "message") => {
     if (playSound) {
       // Play the message sound
@@ -252,37 +254,45 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
       return [...messages, { text: message, type: type }];
     });
   };
-
   const handlesetWorking = (message) => {
     // Add the message to the end of the current list
-    // Remove any unneeded error text
     setMessages((messages) => {
       return [...messages, { text: message, type: "working" }];
     });
   };
   const handleSelectTask = async (item) => {
     try {
+      // do not run if task already runnning
+      if (isTaskRunning(messages)) return;
+      // Clear message for each task
+      setMessages([]);
+      // Headign for start task heading for each task
       handlesetMessage(item?.label, "heading");
-
+      // Performing pre checks
       handlesetWorking("Performing pre-task checks");
       // Start the setup process
       setCurrenTask(item);
-
+      // Start Setup
       const isSetup = await handleSetup();
       if (isSetup != true) {
         // End the process after 500 ticks if started with flags
         return handleEndTask();
       }
-      // Start the chosen task
+      // check if chosen task not exist
+      if (!TaskFunctions[`${item.value}`]) {
+        return handlesetMessage(`No function found `, "error");
+      }
+      // if exist start the chosen task
       await TaskFunctions[`${item.value}`]({
         stateconfig,
         statelocalEnv,
         stateremoteEnv,
+        isFlaggedStart,
         handlesetMessage,
         handlesetWorking,
       });
       // End the process after 500 ticks if started with flags
-      // handleEndTask();
+      return handleEndTask();
     } catch (error) {
       console.log(error);
     }
@@ -335,88 +345,76 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     },
   ];
   const handleTabChange = (name) => {
+    if (isTaskRunning(messages)) {
+      return false;
+    }
+    if (messages.length > 0) {
+      setMessages([]);
+    }
     setActiveTab(name);
   };
   return (
     <Box flexDirection="column">
       <Tabs
-        onChange={handleTabChange}
         colors={{
           activeTab: {
-            color: "transparent",
-            backgroundColor: hexHighlight,
+            color: "none",
+            backgroundColor: "none",
           },
         }}
+        onChange={handleTabChange}
       >
         <Tab name="pull">
-          <Text underline={activeTab == "pull"}>Pull</Text>
+          <Text
+            color={activeTab == "pull" ? hexHighlight : "`"}
+            underline={activeTab == "pull"}
+          >
+            Pull
+          </Text>
         </Tab>
         <Tab name="push">
-          <Text underline={activeTab == "push"}>Push</Text>{" "}
+          <Text
+            color={activeTab == "push" ? hexHighlight : "`"}
+            underline={activeTab == "push"}
+          >
+            Push
+          </Text>
         </Tab>
         <Tab name="backs">
-          <Text underline={activeTab == "backs"}>Terminal/Backups</Text>
+          <Text
+            color={activeTab == "backs" ? hexHighlight : "`"}
+            underline={activeTab == "backs"}
+          >
+            Terminal/Backups
+          </Text>
         </Tab>
       </Tabs>
       <Box marginTop={1}>
         {activeTab === "pull" && (
-          <SelectInput
+          <CustomSelectTaskInput
             items={pullitems}
-            indicatorComponent={({ isSelected }) =>
-              isSelected ? (
-                <Text color={hexHighlight}> {`>`} </Text>
-              ) : (
-                <Text> {` `} </Text>
-              )
-            }
-            itemComponent={(props) => (
-              <ItemComponent
-                currentTask={currentTask}
-                isDisabled={() => isDisabled(props.value)}
-                {...props}
-              />
-            )}
-            onSelect={handleSelectTask}
+            currentTask={currentTask}
+            isDisabled={(val) => isDisabled(val)}
+            isTaskRunning={() => isTaskRunning(messages)}
+            handleSelectTask={handleSelectTask}
           />
         )}
         {activeTab === "push" && (
-          <SelectInput
+          <CustomSelectTaskInput
             items={pushitems}
-            indicatorComponent={({ isSelected }) =>
-              isSelected ? (
-                <Text color={hexHighlight}> {`>`} </Text>
-              ) : (
-                <Text> {` `} </Text>
-              )
-            }
-            itemComponent={(props) => (
-              <ItemComponent
-                currentTask={currentTask}
-                isDisabled={() => isDisabled(props.value)}
-                {...props}
-              />
-            )}
-            onSelect={handleSelectTask}
+            currentTask={currentTask}
+            isDisabled={(val) => isDisabled(val)}
+            isTaskRunning={() => isTaskRunning(messages)}
+            handleSelectTask={handleSelectTask}
           />
         )}
         {activeTab === "backs" && (
-          <SelectInput
+          <CustomSelectTaskInput
             items={backsitems}
-            indicatorComponent={({ isSelected }) =>
-              isSelected ? (
-                <Text color={hexHighlight}> {`>`} </Text>
-              ) : (
-                <Text> {` `} </Text>
-              )
-            }
-            itemComponent={(props) => (
-              <ItemComponent
-                currentTask={currentTask}
-                isDisabled={() => isDisabled(props.value)}
-                {...props}
-              />
-            )}
-            onSelect={handleSelectTask}
+            currentTask={currentTask}
+            isDisabled={(val) => isDisabled(val)}
+            isTaskRunning={() => isTaskRunning(messages)}
+            handleSelectTask={handleSelectTask}
           />
         )}
       </Box>

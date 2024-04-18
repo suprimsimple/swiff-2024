@@ -3,10 +3,10 @@ import { promisify } from "util";
 import { isEmpty } from "lodash-es";
 import fs from "fs-extra";
 import { exec } from "child_process";
-import * as cmd from "node-cmd";
+import cmd from "node-cmd";
 import { colourHighlight, colourAttention } from "./colors";
 const execPromise = promisify(exec);
-const cmdPromise = cmd;
+const cmdPromise = async (config) => cmd.runSync(config);
 
 // Make sure any symlinks in the project folder are resolved
 export const appDirectory = fs.realpathSync(process.cwd());

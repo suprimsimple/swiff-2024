@@ -115,6 +115,7 @@ const getRemoteEnv = async ({ sshKeyPath, serverConfig, isInteractive }) => {
     isInteractive,
     serverConfig.appPath
   );
+
   // Return any errors
   if (remoteEnvIssues) return new Error(remoteEnvIssues);
   // Normalize the data

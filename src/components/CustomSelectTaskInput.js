@@ -1,0 +1,37 @@
+import { Text } from "ink";
+import SelectInput from "ink-select-input";
+import React from "react";
+import { hexHighlight } from "../colors";
+import ItemComponent from "./ItemComponent";
+
+const CustomSelectTaskInput = ({
+  items,
+  currentTask,
+  isDisabled,
+  isTaskRunning,
+  handleSelectTask,
+}) => {
+  return (
+    <SelectInput
+      items={items}
+      indicatorComponent={({ isSelected }) =>
+        isSelected ? (
+          <Text color={hexHighlight}> {`>`} </Text>
+        ) : (
+          <Text> {` `} </Text>
+        )
+      }
+      itemComponent={(props) => (
+        <ItemComponent
+          currentTask={currentTask}
+          isDisabled={() => isDisabled(props.value)}
+          isTaskRunning={isTaskRunning()}
+          {...props}
+        />
+      )}
+      onSelect={handleSelectTask}
+    />
+  );
+};
+
+export default CustomSelectTaskInput;
