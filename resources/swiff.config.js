@@ -5,7 +5,7 @@
 
 // Remote SSH server details
 export default {
-  // Environment  staging, production, etc !make sure server consits server with environment name
+  // set Default Environment  staging, production, etc !make sure server consits server with environment name
   environment: "staging",
   server: {
     staging: {

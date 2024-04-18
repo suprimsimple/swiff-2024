@@ -1,5 +1,4 @@
 import fs from "fs-extra";
-import get from "lodash.get";
 import path from "path";
 import { fileURLToPath } from "node:url";
 import { appDirectory, resolveApp } from "./utils";
@@ -29,13 +28,14 @@ const setupConfig = async (hasNewConfig, isInteractive) => {
   // Get config contents
   const config = await getConfig();
   // Build a list of any missing config options
-  const missingConfigSettings = getConfigIssues(
-    config,
-    hasNewConfig,
-    isInteractive
-  );
+  // const missingConfigSettings = getConfigIssues(
+  //   config,
+  //   hasNewConfig,
+  //   isInteractive
+  // );
+  // missingConfigSettings ? new Error(missingConfigSettings) : config
   // Return the missing settings or the whole env
-  return missingConfigSettings ? new Error(missingConfigSettings) : config;
+  return config;
 };
 
 const getConfig = async () => {
@@ -62,25 +62,23 @@ const getConfigIssues = (config, hasNewConfig, isInteractive = false) => {
     "server.port",
   ];
   // Loop over the array and match against the keys in the users config
-  const missingSettings = requiredSettings.filter(
-    (setting) =>
-      get(config, setting) === undefined || get(config, setting).length === 0
-  );
+  const missingSettings = Object.values(config.server[`${config?.environment}`])
+    ?.map((item) => item == undefined || item.length <= 0)
+    .includes(true);
   // Return the error if any
-  return !isEmpty(missingSettings)
+  return missingSettings
     ? `Add the following ${
-        missingSettings.length > 1 ? "values" : "value"
+        requiredSettings.length > 1 ? "values" : "value"
       } to your ${
         hasNewConfig
           ? `new config:\n${colourNotice(pathConfigs.pathConfig)}`
           : `${colourNotice(configFileName)}:`
-      }\n\n${missingSettings
+      }\n\n${requiredSettings
         .map((s, i) => `${colourNotice(`— `)} ${s}`)
         .join("\n")}\n\n${
         isInteractive ? `Then hit [ enter ↵ ] to rerun this task` : ``
-      }
-        `
-    : null;
+      }`
+    : false;
 };
 
-export { setupConfig, getConfig, createConfig };
+export { setupConfig, getConfig, createConfig, getConfigIssues };

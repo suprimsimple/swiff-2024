@@ -1,4 +1,4 @@
-import nodeSsh from "node-ssh";
+import { NodeSSH } from "node-ssh";
 import { username as resolveUsername } from "username";
 import path from "path";
 import chalk from "chalk";
@@ -49,7 +49,7 @@ const sshConnect = async ({ host, username, port, sshKeyPath }) => {
     ? sshKeyPath
     : `/Users/${user}/.ssh/id_rsa`;
   // Create a SSH connection
-  const ssh = new nodeSsh();
+  const ssh = new NodeSSH();
   await ssh
     .connect({
       host: host,

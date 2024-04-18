@@ -13,12 +13,12 @@ const createEnv = (
 
 const setupLocalEnv = async (isInteractive) => {
   // Get the local env file
-  let localEnv = getParsedEnv(pathLocalEnv);
+  let localEnv = getParsedEnv(pathConfigs.pathLocalEnv);
   const isEnvMissing = localEnv instanceof Error;
   // If env isn't available then create one
   if (isEnvMissing) {
     await createEnv();
-    localEnv = getParsedEnv(pathLocalEnv);
+    localEnv = getParsedEnv(pathConfigs.pathLocalEnv);
   }
   // Get a summary of any env issues
   const localEnvIssues = getEnvIssues(
@@ -79,7 +79,7 @@ const getEnvIssues = (
               missingSettings.length > 1 ? "values" : "value"
             } to your${
               isEnvMissing ? ` new` : ""
-            } project .env:\n${colourNotice(pathLocalEnv)}`
+            } project .env:\n${colourNotice(pathConfigs.pathLocalEnv)}`
       }\n\n${missingSettings
         .map((s) => `${s}="${colourNotice(`value`)}"`)
         .join("\n")}${

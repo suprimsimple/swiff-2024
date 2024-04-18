@@ -38,6 +38,9 @@ export default {
     "update-notifier",
     "fs-extra",
     "ink-big-text",
+    "child_process",
+    "cli-spinners",
     "ink-gradient",
+    "node-ssh",
   ],
 };

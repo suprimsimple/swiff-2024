@@ -38,6 +38,8 @@
     "swiff-4": "build/index.js"
   },
   "dependencies": {
+    "child_process": "^1.0.2",
+    "cli-spinners": "^2.9.2",
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
     "ink": "^4.4.1",
