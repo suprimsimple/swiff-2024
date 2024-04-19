@@ -96,6 +96,7 @@ const getRemoteEnv = async ({ sshKeyPath, serverConfig, isInteractive }) => {
     port: serverConfig.port,
     sshKeyPath: sshKeyPath,
   };
+
   // Connect via SSH to get the contents of the remote .env
   const remoteEnv = await getSshEnv(sshConfig);
   if (remoteEnv instanceof Error) {
@@ -115,11 +116,11 @@ const getRemoteEnv = async ({ sshKeyPath, serverConfig, isInteractive }) => {
     isInteractive,
     serverConfig.appPath
   );
-
   // Return any errors
   if (remoteEnvIssues) return new Error(remoteEnvIssues);
   // Normalize the data
   if (isEmpty(remoteEnv.DB_PORT)) remoteEnv.DB_PORT = 3306;
+
   return remoteEnv;
 };
 

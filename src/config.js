@@ -3,7 +3,6 @@ import path from "path";
 import { fileURLToPath } from "node:url";
 import { appDirectory, resolveApp } from "./utils";
 import { createRequire } from "node:module";
-import { isEmpty } from "lodash-es";
 import { colourNotice } from "./colors";
 const require = createRequire(import.meta.url);
 export const configFileName = "swiff.config.js";

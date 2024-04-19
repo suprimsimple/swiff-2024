@@ -93,8 +93,7 @@ const getSshEnv = async ({ host, username, port, appPath, sshKeyPath }) => {
   // Set where we’ll be downloading the temporary remote .env file
   const tempBackupPath = path.join(pathConfigs.pathBackups, ".env");
   // Download the remote .env file
-  // We can’t read the env contents with this package so we have to download
-  // then read it
+  // We can’t read the env contents with this package so we have to download  then read it
   await ssh
     .getFile(tempBackupPath, path.join(appPath, ".env"))
     .catch((error) => (errorMessage = error));

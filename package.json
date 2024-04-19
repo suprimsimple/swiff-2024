@@ -1,6 +1,6 @@
 {
   "name": "swiff-4",
-  "version": "1.1.5",
+  "version": "2.0.0",
   "main": "build/index.js",
   "type": "module",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
@@ -37,6 +37,13 @@
   "bin": {
     "swiff-4": "build/index.js"
   },
+  "files": [
+    "build/*",
+    "backups/*",
+    "resources/*",
+    "package.json",
+    "node_modules"
+  ],
   "dependencies": {
     "child_process": "^1.0.2",
     "cli-spinners": "^2.9.2",
@@ -48,7 +55,6 @@
     "ink-spinner": "^5.0.0",
     "ink-tab": "^5.0.0",
     "ink-task-list": "^2.0.0",
-    "loadash": "^1.0.0",
     "lodash-es": "^4.17.21",
     "lodash.get": "^4.4.2",
     "node-cmd": "^5.0.0",

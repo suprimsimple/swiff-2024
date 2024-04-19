@@ -90,14 +90,14 @@ const TaskFunctions = {
 
     // If the env can't be found then show a message
     if (remoteEnv instanceof Error) {
-      return handlesetMessage(
+      handlesetMessage(
         colourNotice(
           `Consider adding an .env file on the remote server\n   at ${path.join(
             stateconfig?.server[`${stateconfig.environment}`]?.appPath,
             ".env"
           )}`
         ),
-        "error"
+        "message"
       );
     }
     // Set the name of the remote environment
@@ -262,10 +262,13 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
   };
   const handleSelectTask = async (item) => {
     try {
-      // do not run if task already runnning
-      if (isTaskRunning(messages)) return;
+      // if task is Disabled return
+      if (isDisabled(item.value)) return;
       // Clear message for each task
       setMessages([]);
+      // do not run if task already runnning
+      if (isTaskRunning(messages)) return;
+
       // Headign for start task heading for each task
       handlesetMessage(item?.label, "heading");
       // Performing pre checks

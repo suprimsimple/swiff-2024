@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import SelectInput from "ink-select-input";
-
-import updateNotifier from "update-notifier";
+// import updateNotifier from "update-notifier";
 import { colourHighlight, hexHighlight } from "./colors";
 import { doesFileExist } from "./utils";
 import { getConfig, pathConfigs } from "./config";
@@ -15,6 +14,9 @@ const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
 // Start with a blank slate
 console.clear();
+
+// package update
+// updateNotifier({ pkg: pkg }).notify();
 
 const App = () => {
   const [envOptions, setEnvOptions] = useState([]);
@@ -127,6 +129,5 @@ ${
 // process.stdin.on('data', key => {
 //   if (['\u0003', '\u001B'].includes(key)) process.exit()
 // })
-updateNotifier({ pkg: pkg }).notify();
 
 render(<App />);

@@ -28,7 +28,6 @@ export default {
     "chalk",
     "ssh2",
     "node-ssh",
-    "loadash",
     "lodash-es",
     "lodash.get",
     "node-cmd",

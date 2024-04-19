@@ -12,11 +12,11 @@ const ItemComponent = ({
   isTaskRunning,
 }) => {
   const isActive = currentTask && currentTask?.value === id && isTaskRunning;
-  const normalColor = isSelected ? hexHighlight : hexDefault;
-
+  const normalColor = !isDisabled(id) && isSelected ? hexHighlight : hexDefault;
+  const disabledColor = isDisabled(id) && (isSelected ? "#CCC" : hexMuted);
   return (
     <React.Fragment>
-      <Text bold color={normalColor}>
+      <Text bold color={disabledColor || normalColor}>
         {`${title}`}
       </Text>
       {description && (
