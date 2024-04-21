@@ -111,15 +111,6 @@ const App = () => {
   );
 };
 
-const taskHelp = (isVerbose = false) => `
-${
-  isVerbose
-    ? `💁  Run ${colourHighlight(
-        "swiff"
-      )} within your project root for an interactive interface.\nOtherwise use the following commands to quickly run a task:`
-    : `Try one of the following flags:`
-}\n}`;
-
 // // Catch unhandled rejections
 // process.on('unhandledRejection', reason => {
 //   process.exit()
