@@ -109,7 +109,7 @@ const replaceRsyncOutput = (outputText, folders) =>
           (i) =>
             i
               .replace(/(\<|\>)f.st..../g, colourHighlight("^")) // Updated
-              .replace(/(\<|\>)f\+\+\+\+\+\+\+/g, colourHighlight("+")) // Added
+              .replace(/(<|>)f\++/g, colourHighlight("+")) // Added
               .replace(/\*deleting/g, colourAttention("-")) // Deleted
         )
         // Remove empty items

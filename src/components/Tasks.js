@@ -103,7 +103,7 @@ const TaskFunctions = {
     // Set the name of the remote environment
     let remoteEnvironment = "";
     if (!(remoteEnv instanceof Error)) {
-      remoteEnvironment = remoteEnv.ENVIRONMENT;
+      remoteEnvironment = remoteEnv?.ENVIRONMENT;
     }
     // Send the pull commands
     const pullStatus = await executeCommands(pullCommands);
@@ -168,10 +168,14 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
         return handlesetMessage(missingConfigSettings, "error");
       }
       // Add/Update the config to the global state
-      setConfig((conf) => {
+      setConfig(() => {
         return {
-          environment: conf?.environment,
-          ...config,
+          environment: stateconfig?.environment, // Dont change environment after state selected
+          local: config.local,
+          pushFolders: config.pushFolders,
+          pullFolders: config.pullFolders,
+          disabled: config.disabled,
+          server: config.server,
         };
       });
       // Get the users env file

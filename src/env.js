@@ -79,7 +79,7 @@ const getEnvIssues = (
               missingSettings.length > 1 ? "values" : "value"
             } to your${
               isEnvMissing ? ` new` : ""
-            } project .env:\n${colourNotice(pathConfigs.pathLocalEnv)}`
+            } project .env:\n${colourNotice(pathConfigs?.pathLocalEnv)}`
       }\n\n${missingSettings
         .map((s) => `${s}="${colourNotice(`value`)}"`)
         .join("\n")}${
@@ -114,7 +114,7 @@ const getRemoteEnv = async ({ sshKeyPath, serverConfig, isInteractive }) => {
     remoteEnv === false,
     true,
     isInteractive,
-    serverConfig.appPath
+    serverConfig?.appPath
   );
   // Return any errors
   if (remoteEnvIssues) return new Error(remoteEnvIssues);

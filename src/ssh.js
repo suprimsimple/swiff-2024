@@ -259,7 +259,8 @@ const getSshPullCommands = ({
     .join(";");
   // Use grep to filter the rsync output
   const greppage = `grep -E '^(!|>|<|\\*)'`;
-  return `(${rsyncCommands}) | ${greppage}`;
+
+  return `(${rsyncCommands})|${greppage}`;
 };
 
 // Build command to test the SSH connection is setup

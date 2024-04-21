@@ -14,7 +14,7 @@ const IntroTitle = () => {
 const IntroText = ({ stateconfig }) => {
   return (
     <React.Fragment>
-      <IntroTitle />
+      {/* <IntroTitle /> */}
       <Box marginBottom={1} flexDirection="column">
         <Text color="#ffffff">
           <Text color="#ffffff">

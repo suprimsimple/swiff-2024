@@ -28,10 +28,15 @@ const App = () => {
     stateconfig?.disabled.includes(taskId);
   const handleSelectEnv = async (value) => {
     setselectedEnv(true);
+
     setConfig((config) => {
       return {
-        ...config,
-        environment: value,
+        environment: `${value}`,
+        local: config.local,
+        pushFolders: config.pushFolders,
+        pullFolders: config.pullFolders,
+        disabled: config.disabled,
+        server: config.server,
       };
     });
   };
