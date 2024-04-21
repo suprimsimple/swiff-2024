@@ -1,0 +1,21 @@
+{% extends 'layouts/base' %}
+
+{% block content %}
+	{% import 'macros/images' as imageMacros %}
+	{% import "macros" as macros %}
+	{% set pageblocks = entry.mainContent %}
+	{% if pageblocks %}
+	{% for block in pageblocks.all() %}
+	   {% set blockIndex = loop.index %}
+	    {% switch true %}
+			{% case block.type.handle %}
+			   {% include 'modules/module' with {block:block, blockIndex:blockIndex} %}
+			{% default %}
+				<h1>
+					TODO: DEVELOPERS WORKING				
+				</h1>
+		{% endswitch %}
+    {% endfor %}
+	{% endif %}
+  {% include  "modules/_module_start_cta" %}
+{% endblock  content %}

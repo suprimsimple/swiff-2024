@@ -32,7 +32,11 @@ import {
   hexHighlight,
 } from "../colors";
 import MessageTemplate from "./MessageTemplate";
-import { getSshPullCommands, getSshTestCommand } from "../ssh";
+import {
+  getSshCopyInstructions,
+  getSshPullCommands,
+  getSshTestCommand,
+} from "../ssh";
 import CustomSelectTaskInput from "./CustomSelectTaskInput";
 // Get the latest task status to check if running
 const isTaskRunning = (messages) => {
@@ -147,101 +151,103 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
   const [currentTask, setCurrenTask] = useState(null);
   const [isFlaggedStart, setisFlaggedStart] = useState(false);
   const handleSetup = async () => {
-    try {
-      const isInteractive = !isFlaggedStart;
-      // Check if the config exists
-      const doesConfigExist = await doesFileExist(pathConfigs.pathConfig);
-      // If no config, create
-      if (!doesConfigExist) await createConfig();
-      // else get Config
-      const config = await getConfig();
-      // If there's any missing config options then open the config file and show the error
-      const missingConfigSettings = getConfigIssues(
-        {
-          environment: stateconfig?.environment,
-          ...config,
-        },
-        !doesConfigExist,
-        isInteractive
-      );
-      if (missingConfigSettings) {
-        return handlesetMessage(missingConfigSettings, "error");
-      }
-      // Add/Update the config to the global state
-      setConfig(() => {
-        return {
-          environment: stateconfig?.environment, // Dont change environment after state selected
-          local: config.local,
-          pushFolders: config.pushFolders,
-          pullFolders: config.pullFolders,
-          disabled: config.disabled,
-          server: config.server,
-        };
-      });
-      // Get the users env file
-      const localEnv = await setupLocalEnv(isInteractive);
-      // If there's anything wrong with the env then return an error
-      if (localEnv instanceof Error) return handlesetMessage(localEnv, "error");
-      // Add the env to the global state
-      setLocalEnv(localEnv);
-      // Get the users key we'll be using to connect with
-      const user = await resolveUsername();
-      // Check if the key file exists
-      const sshKey = !isEmpty(localEnv.SWIFF_CUSTOM_KEY)
-        ? localEnv.SWIFF_CUSTOM_KEY
-        : `/Users/${user}/.ssh/id_rsa`;
-      const doesSshKeyExist = await doesFileExist(sshKey);
-      // If the key isn't found then show a message
-      if (!doesSshKeyExist) {
-        return handlesetMessage(
-          `Your${
-            !isEmpty(localEnv.SWIFF_CUSTOM_KEY) ? " custom" : ""
-          } SSH key file wasn’t found at:\n  ${colourNotice(
-            sshKey
-          )}\n\nYou can either:\n\na) Create a SSH key with this command (leave passphrase empty):\n  ${colourNotice(
-            `ssh-keygen -m PEM -b 4096 -f ${sshKey}`
-          )}\n\nb) Or add an existing key path in your .env with:\n  ${colourNotice(
-            `SWIFF_CUSTOM_KEY="/Users/${user}/.ssh/[your-key-name]"`
-          )}${
-            isInteractive ? `\n\nThen hit [ enter ↵ ] to rerun this task` : ""
-          }`,
-          "error"
-        );
-      }
-      // Check the users SSH key has been added to the server
-      const checkSshSetup = await executeCommands(
-        getSshTestCommand(
-          stateconfig.server[`${stateconfig.environment}`].user,
-          stateconfig.server[`${stateconfig.environment}`].host,
-          stateconfig.server[`${stateconfig.environment}`].port,
-          !isEmpty(localEnv.SWIFF_CUSTOM_KEY) ? localEnv.SWIFF_CUSTOM_KEY : null
-        )
-      );
-      // If there's an issue with the connection then give some assistance
-      if (checkSshSetup instanceof Error) {
-        return handlesetMessage(
-          `A SSH connection couldn’t be made with these details:\n\nServer host: ${
-            stateconfig.server[`${stateconfig.environment}`].server.host
-          }\nServer user: ${
-            stateconfig.server[`${stateconfig.environment}`].server.user
-          }\nPort: ${
-            stateconfig.server[`${stateconfig.environment}`].server.port
-          }\nSSH key: ${sshKey}\n\n${getSshCopyInstructions(
-            stateconfig.server[`${stateconfig.environment}`],
-            sshKey
-          )}\n\n${
-            isEmpty(localEnv.SWIFF_CUSTOM_KEY)
-              ? `${chalk.bold(
-                  `Is the 'SSH key' path above wrong?`
-                )}\nAdd the correct path to your project .env like this:\nSWIFF_CUSTOM_KEY="/Users/${user}/.ssh/id_rsa"`
-              : ""
-          }`
-        );
-      }
-      return true;
-    } catch (error) {
-      return false;
+    const isInteractive = !isFlaggedStart;
+    // Check if the config exists
+    const doesConfigExist = await doesFileExist(pathConfigs.pathConfig);
+    // If no config, create
+    if (!doesConfigExist) await createConfig();
+    // else get Config
+    const config = await getConfig();
+    // If there's any missing config options then open the config file and show the error
+    const missingConfigSettings = getConfigIssues(
+      {
+        environment: stateconfig?.environment,
+        ...config,
+      },
+      !doesConfigExist,
+      isInteractive
+    );
+    if (missingConfigSettings) {
+      return handlesetMessage(missingConfigSettings, "error");
     }
+    // Add/Update the config to the global state
+    setConfig(() => {
+      return {
+        environment: stateconfig?.environment, // Dont change environment after state selected
+        local: config.local,
+        pushFolders: config.pushFolders,
+        pullFolders: config.pullFolders,
+        disabled: config.disabled,
+        server: config.server,
+      };
+    });
+    // Get the users env file
+    const localEnv = await setupLocalEnv(isInteractive);
+    // If there's anything wrong with the env then return an error
+    if (localEnv instanceof Error) return handlesetMessage(localEnv, "error");
+    // Add the env to the global state
+    setLocalEnv(localEnv);
+    // Get the users key we'll be using to connect with
+    const user = await resolveUsername();
+    // Check if the key file exists
+    const sshKey = !isEmpty(localEnv?.SWIFF_CUSTOM_KEY)
+      ? localEnv?.SWIFF_CUSTOM_KEY
+      : `/Users/${user}/.ssh/id_rsa`;
+    const doesSshKeyExist = await doesFileExist(sshKey);
+    // If the key isn't found then show a message
+    if (!doesSshKeyExist) {
+      return handlesetMessage(
+        `Your${
+          !isEmpty(localEnv.SWIFF_CUSTOM_KEY) ? " custom" : ""
+        } SSH key file wasn’t found at:\n  ${colourNotice(
+          sshKey
+        )}\n\nYou can either:\n\na) Create a SSH key with this command (leave passphrase empty):\n  ${colourNotice(
+          `ssh-keygen -m PEM -b 4096 -f ${sshKey}`
+        )}\n\nb) Or add an existing key path in your .env with:\n  ${colourNotice(
+          `SWIFF_CUSTOM_KEY="/Users/${user}/.ssh/[your-key-name]"`
+        )}${
+          isInteractive ? `\n\nThen hit [ enter ↵ ] to rerun this task` : ""
+        }`,
+        "error"
+      );
+    }
+    // Check the users SSH key has been added to the server
+    const checkSshSetup = await executeCommands(
+      getSshTestCommand(
+        stateconfig.server[`${stateconfig.environment}`].user,
+        stateconfig.server[`${stateconfig.environment}`].host,
+        stateconfig.server[`${stateconfig.environment}`].port,
+        !isEmpty(localEnv.SWIFF_CUSTOM_KEY) ? localEnv.SWIFF_CUSTOM_KEY : null
+      )
+    );
+    console.log(
+      checkSshSetup instanceof Error,
+      stateconfig?.server[`${stateconfig?.environment}`]
+    );
+    // If there's an issue with the connection then give some assistance
+    if (checkSshSetup instanceof Error) {
+      return handlesetMessage(
+        `A SSH connection couldn’t be made with these details:\n\nServer host: ${
+          stateconfig?.server[`${stateconfig?.environment}`]?.host
+        }\nServer user: ${
+          stateconfig?.server[`${stateconfig?.environment}`]?.user
+        }\nPort: ${
+          stateconfig?.server[`${stateconfig?.environment}`]?.port
+        }\nSSH key: ${sshKey}\n\n${getSshCopyInstructions(
+          {
+            server: stateconfig?.server[`${stateconfig?.environment}`],
+          },
+          sshKey
+        )}\n\n${
+          isEmpty(localEnv?.SWIFF_CUSTOM_KEY)
+            ? `${chalk.bold(
+                `Is the 'SSH key' path above wrong?`
+              )}\nAdd the correct path to your project .env like this:\nSWIFF_CUSTOM_KEY="/Users/${user}/.ssh/id_rsa"`
+            : ""
+        }`
+      );
+    }
+    return true;
   };
   const handleEndTask = () => {
     if (!isTaskRunning(messages) && isFlaggedStart) {
@@ -272,7 +278,6 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
       setMessages([]);
       // do not run if task already runnning
       if (isTaskRunning(messages)) return;
-
       // Headign for start task heading for each task
       handlesetMessage(item?.label, "heading");
       // Performing pre checks

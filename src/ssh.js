@@ -135,8 +135,8 @@ const getSshCopyInstructions = ({ server }, sshKeyPath) =>
     `Haven’t added your key to the server?`
   )}\nYou can quickly add it with ssh-copy-id:\n${colourNotice(
     `ssh-copy-id ${!isEmpty(sshKeyPath) ? `-i ${sshKeyPath} ` : ""}${
-      server.port !== 22 ? `-p ${server.port} ` : ""
-    }${server.user}@${server.host}`
+      server?.port !== 22 ? `-p ${server?.port} ` : ""
+    }${server?.user}@${server?.host}`
   )}`;
 
 const getSshPushCommands = ({
