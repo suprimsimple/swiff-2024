@@ -13,7 +13,7 @@ export default {
     babel({
       babelHelpers: "bundled",
       ignore: ["node_modules"],
-      presets: ["@babel/preset-react"],
+      presets: ["@babel/preset-env", "@babel/preset-react"],
     }),
     commonjs(),
     json(),
