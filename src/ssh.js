@@ -312,13 +312,6 @@ const getSshDatabase = async ({
   // If there’s connection issues then return the messages
   if (ssh instanceof Error) return ssh;
 
-  console.log({
-    host: remoteEnv.DB_SERVER,
-    port: remoteEnv.DB_PORT,
-    user: remoteEnv.DB_USER,
-    password: remoteEnv.DB_PASSWORD,
-    database: remoteEnv.DB_DATABASE,
-  });
   // Dump the database and gzip on the remote server
   const zipCommandConfig = {
     host: remoteEnv.DB_SERVER,
@@ -332,7 +325,6 @@ const getSshDatabase = async ({
     }),
   };
 
-  console.log(zipCommandConfig);
   let errorMessage;
   await ssh
     .execCommand(getDbDumpZipCommands(zipCommandConfig), {

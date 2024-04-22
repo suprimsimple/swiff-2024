@@ -91,7 +91,7 @@ const TaskFunctions = {
 
     // Get the remote env file via SSH
     const remoteEnv = await getRemoteEnv({
-      serverConfig: stateconfig.server[`${environment}`],
+      serverConfig: stateconfig?.server[`${environment}`],
       isInteractive: isFlaggedStart,
       sshKeyPath: statelocalEnv?.SWIFF_CUSTOM_KEY,
     });
@@ -101,7 +101,7 @@ const TaskFunctions = {
       handlesetMessage(
         colourNotice(
           `Consider adding an .env file on the remote server\n   at ${path.join(
-            stateconfig?.server[`${stateconfig.environment}`]?.appPath,
+            stateconfig?.server[`${stateconfig?.environment}`]?.appPath,
             ".env"
           )}`
         ),
@@ -224,8 +224,6 @@ const TaskFunctions = {
     const { user, host, appPath, port } = stateconfig.server[`${environment}`];
     const serverConfig = stateconfig.server[`${environment}`];
     const localConfig = stateconfig?.local;
-
-    console.log(localConfig);
     const {
       SWIFF_CUSTOM_KEY,
       DB_SERVER,
@@ -276,22 +274,27 @@ const TaskFunctions = {
       gzipFilePath: localBackupFilePath,
     });
     // If there's any local db backup issues then return the messages
-    if (localDbDump instanceof Error)
+    if (localDbDump instanceof Error) {
       return handlesetMessage(localDbDump, "error");
-    // Share what's happening with the user
-    handlesetWorking(
-      `Updating ${colourHighlight(DB_DATABASE)} on ${colourHighlight(
-        DB_SERVER
-      )}`
-    );
+    }
     // Check if the user is running ddev, otherwise assume local database
-    if (
-      typeof localConfig !== "undefined" &&
-      typeof localConfig.ddev !== "undefined" &&
-      localConfig.ddev
-    ) {
-      await cmdPromise(`ddev import-db --file=${importFile}`);
-      await cmdPromise(`rm ${importFile}`);
+    if (localConfig && localConfig?.ddev === true) {
+      // Share what's happening with the user
+      handlesetWorking(
+        `Updating ${colourHighlight(DB_DATABASE)} on ${colourHighlight(
+          DB_SERVER
+        )}`
+      );
+      const importyDbtolocal = await cmdPromise(
+        `ddev import-db --file=${importFile}`
+      );
+      if (!isEmpty(importyDbtolocal?.err)) {
+        return handlesetMessage(`${importyDbtolocal?.err}`, "error");
+      }
+      const removeimportyDbtolocal = await cmdPromise(`rm ${importFile}`);
+      if (!isEmpty(removeimportyDbtolocal?.err)) {
+        return handlesetMessage(`${removeimportyDbtolocal?.err}`, "error");
+      }
     } else {
       // Drop the tables from the local database
       const dropTables = await doDropAllDbTables({
@@ -330,18 +333,19 @@ const TaskFunctions = {
         importFile: importFile,
       });
       // If there's any import issues then return the messages
-      if (importDatabase instanceof Error)
+      if (importDatabase instanceof Error) {
         return handlesetMessage(
           `There were issues refreshing your local ${colourAttention(
             DB_DATABASE
           )} database\n\n${colourMuted(importDatabase)}`,
           "error"
         );
+      }
       // Remove remote .sql working file
       await cmdPromise(`rm ${importFile}`);
     }
     // Show a success message
-    handlesetMessage(
+    return handlesetMessage(
       `Your ${colourHighlight(
         DB_DATABASE
       )} database was updated with the ${colourHighlight(
