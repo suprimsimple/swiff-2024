@@ -22,8 +22,16 @@ const getSshInit = async ({ host, user, port, sshKeyPath }) => {
     port: port,
   };
   // Get the custom privateKey if it's set
-  sshKeyPath = !isEmpty(sshKeyPath) ? { sshKeyPath: sshKeyPath } : null;
-  const connection = await sshConnect({ ...config, ...sshKeyPath });
+  sshKeyPath = !isEmpty(sshKeyPath) ? sshKeyPath : null;
+  // Get the local username so we can get the default key below (macOS path)
+  const username = await resolveUsername();
+  const sshKeyResolvedPath = !isEmpty(sshKeyPath)
+    ? sshKeyPath
+    : `/Users/${username}/.ssh/id_rsa`;
+  const connection = await sshConnect({
+    ...config,
+    privateKeyPath: sshKeyResolvedPath,
+  });
   return connection;
 };
 
@@ -303,6 +311,14 @@ const getSshDatabase = async ({
   });
   // If there’s connection issues then return the messages
   if (ssh instanceof Error) return ssh;
+
+  console.log({
+    host: remoteEnv.DB_SERVER,
+    port: remoteEnv.DB_PORT,
+    user: remoteEnv.DB_USER,
+    password: remoteEnv.DB_PASSWORD,
+    database: remoteEnv.DB_DATABASE,
+  });
   // Dump the database and gzip on the remote server
   const zipCommandConfig = {
     host: remoteEnv.DB_SERVER,
@@ -315,6 +331,8 @@ const getSshDatabase = async ({
       sshConn: ssh,
     }),
   };
+
+  console.log(zipCommandConfig);
   let errorMessage;
   await ssh
     .execCommand(getDbDumpZipCommands(zipCommandConfig), {

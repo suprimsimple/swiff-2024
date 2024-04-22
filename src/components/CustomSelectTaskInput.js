@@ -1,6 +1,6 @@
+import React from "react";
 import { Text } from "ink";
 import SelectInput from "ink-select-input";
-import React from "react";
 import { hexHighlight } from "../colors";
 import ItemComponent from "./ItemComponent";
 

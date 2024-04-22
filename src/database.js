@@ -194,10 +194,12 @@ const isMysql8 = async ({ sshConn, localCmd }) => {
         if (stderr)
           errorMessage = `There was an issue checking mysql version\n\n${stderr}`;
       });
-    if (output.indexOf("Ver 8") !== -1) {
+
+    if (output && output?.includes("Ver 8") != -1) {
       return true;
+    } else {
+      return false;
     }
-    return false;
   } else if (localCmd) {
     let output = "",
       errorMessage = "";
@@ -210,10 +212,11 @@ const isMysql8 = async ({ sshConn, localCmd }) => {
         if (stderr)
           errorMessage = `There was an issue checking mysql version\n\n${stderr}`;
       });
-    if (output.indexOf("Ver 8") !== -1) {
+    if (output && output?.data && output?.data?.includes("Ver 8") !== -1) {
       return true;
+    } else {
+      return false;
     }
-    return false;
   }
   return false;
 };
