@@ -43,8 +43,17 @@ const doDropAllDbTables = async (config) => {
 
 const doImportDb = async (config) => {
   let errorMessage;
-  await cmdPromise(importDbQuery(config)).catch((e) => (errorMessage = e));
+  await cmdPromise(importDbQuery(config)).catch((error) => {
+    errorMessage = error ? error : error?.err;
+  });
   if (errorMessage) return new Error(errorMessage);
+};
+
+const doddevlocalDump = async ({ importFile }) => {
+  const importyDbtolocal = await cmdPromise(
+    `ddev import-db --file=${importFile} && rm ${importFile}`
+  );
+  return importyDbtolocal;
 };
 
 const doLocalDbDump = async (config) => {
@@ -224,6 +233,7 @@ const isMysql8 = async ({ sshConn, localCmd }) => {
 export {
   getDbDumpZipCommands,
   doDropAllDbTables,
+  doddevlocalDump,
   dropDbQuery,
   doImportDb,
   doLocalDbDump,

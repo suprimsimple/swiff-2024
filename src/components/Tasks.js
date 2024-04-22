@@ -6,6 +6,7 @@ import { exec } from "child_process";
 import SelectInput from "ink-select-input";
 import { username as resolveUsername } from "username";
 import path from "path";
+import cmd from "node-cmd";
 import {
   cmdPromise,
   commaAmpersander,
@@ -41,7 +42,12 @@ import {
   getSshTestCommand,
 } from "../ssh";
 import CustomSelectTaskInput from "./CustomSelectTaskInput";
-import { doImportDb, doLocalDbDump } from "../database";
+import {
+  doDropAllDbTables,
+  doImportDb,
+  doLocalDbDump,
+  doddevlocalDump,
+} from "../database";
 // Get the latest task status to check if running
 const isTaskRunning = (messages) => {
   const currentMessage =
@@ -277,23 +283,18 @@ const TaskFunctions = {
     if (localDbDump instanceof Error) {
       return handlesetMessage(localDbDump, "error");
     }
+
+    // Share what's happening with the user
+    handlesetWorking(
+      `Updating ${colourHighlight(DB_DATABASE)} on ${colourHighlight(
+        DB_SERVER
+      )}`
+    );
     // Check if the user is running ddev, otherwise assume local database
     if (localConfig && localConfig?.ddev === true) {
-      // Share what's happening with the user
-      handlesetWorking(
-        `Updating ${colourHighlight(DB_DATABASE)} on ${colourHighlight(
-          DB_SERVER
-        )}`
-      );
-      const importyDbtolocal = await cmdPromise(
-        `ddev import-db --file=${importFile}`
-      );
-      if (!isEmpty(importyDbtolocal?.err)) {
+      const importyDbtolocal = await doddevlocalDump(importFile);
+      if (isEmpty(importyDbtolocal?.data)) {
         return handlesetMessage(`${importyDbtolocal?.err}`, "error");
-      }
-      const removeimportyDbtolocal = await cmdPromise(`rm ${importFile}`);
-      if (!isEmpty(removeimportyDbtolocal?.err)) {
-        return handlesetMessage(`${removeimportyDbtolocal?.err}`, "error");
       }
     } else {
       // Drop the tables from the local database
