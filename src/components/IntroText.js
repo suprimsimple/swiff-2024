@@ -1,14 +1,14 @@
 import React from "react";
 import BigText from "ink-big-text";
 import { Text, Box } from "ink";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
-const pkg = require("../package.json");
+// import { createRequire } from "node:module";
+// const require = createRequire(import.meta.url);
+// const pkg = require("../package.json");
 import { hexNotice } from "../colors";
 const IntroTitle = () => {
   return (
     <>
-      <BigText text="Swiff 2024" />
+      <BigText text="Swiff 2024" space={true} />
     </>
   );
 };
@@ -16,8 +16,8 @@ const IntroTitle = () => {
 const IntroText = ({ stateconfig }) => {
   return (
     <React.Fragment>
-      <IntroTitle />
-      <Text dimColor>Version {` ${pkg?.version}`}</Text>
+      {/* <IntroTitle /> */}
+      {/* <Text dimColor>Version {` ${pkg?.version}`}</Text> */}
       <Box marginBottom={1} flexDirection="column">
         <Text color="#ffffff">
           <Text color="#ffffff">

@@ -1,6 +1,6 @@
 {
   "name": "swiff-4",
-  "version": "2.0.5",
+  "version": "2.0.9",
   "main": "build/index.js",
   "type": "module",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
@@ -43,7 +43,8 @@
     "backups/*",
     "resources/*",
     "package.json",
-    "node_modules"
+    "node_modules",
+    "readme.md"
   ],
   "dependencies": {
     "child_process": "^1.0.2",

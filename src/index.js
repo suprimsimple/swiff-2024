@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import SelectInput from "ink-select-input";
@@ -6,14 +9,12 @@ import SelectInput from "ink-select-input";
 import { colourHighlight, hexHighlight } from "./colors";
 import { doesFileExist } from "./utils";
 import { getConfig, pathConfigs } from "./config";
-import { createRequire } from "node:module";
 import IntroText from "./components/IntroText";
 import Tasks from "./components/Tasks";
 import ItemComponent from "./components/ItemComponent";
-const require = createRequire(import.meta.url);
-const pkg = require("../package.json");
+
 // Start with a blank slate
-console.clear();
+// console.clear();
 
 // package update
 // updateNotifier({ pkg: pkg }).notify();

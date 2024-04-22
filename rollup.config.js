@@ -1,6 +1,6 @@
 import json from "@rollup/plugin-json";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
-// import commonjs from "@rollup/plugin-commonjs";
+import commonjs from "@rollup/plugin-commonjs";
 import { babel } from "@rollup/plugin-babel";
 export default {
   input: "src/index.js",
@@ -15,7 +15,7 @@ export default {
       ignore: ["node_modules"],
       presets: ["@babel/preset-react"],
     }),
-    // commonjs(),
+    commonjs(),
     json(),
   ],
   external: [
@@ -40,5 +40,6 @@ export default {
     "child_process",
     "cli-spinners",
     "node-ssh",
+    "core-js",
   ],
 };

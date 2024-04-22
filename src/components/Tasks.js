@@ -22,7 +22,6 @@ import {
   setupConfig,
 } from "../config";
 import { getRemoteEnv, setupLocalEnv } from "../env";
-import ItemComponent from "./ItemComponent";
 import {
   colourAttention,
   colourDefault,
@@ -140,6 +139,83 @@ const TaskFunctions = {
       "success"
     );
   },
+  composerPull: async ({
+    stateconfig,
+    handlesetMessage,
+    stateremoteEnv,
+    statelocalEnv,
+    handlesetWorking,
+    isFlaggedStart,
+  }) => {
+    const { environment } = stateconfig;
+    const { user, host, appPath, port } = stateconfig.server[`${environment}`]; // get Env
+    const { DB_DATABASE, SWIFF_CUSTOM_KEY } = statelocalEnv;
+
+    console.log(statelocalEnv);
+    // Share what's happening with the user
+    handlesetWorking(`Backing up your local composer files`);
+    // Backup the local composer files this command fail silently if the user doesn’t have composer files locally just yet
+    await executeCommands(
+      `cp composer.json ${pathConfigs.pathBackups}/${DB_DATABASE}-local-composer.json && cp composer.lock ${pathConfigs.pathBackups}/${DB_DATABASE}-local-composer.lock`
+    );
+
+    // Connect to the remote server
+    const ssh = await getSshInit({
+      host: host,
+      user: user,
+      sshKeyPath: SWIFF_CUSTOM_KEY,
+    });
+
+    // If there's connection issues then return the messages
+    if (ssh instanceof Error) return handlesetMessage(`${ssh}`, "error");
+
+    // Share what's happening with the user
+    handlesetWorking(
+      `Fetching the composer files from the remote server at ${colourHighlight(
+        host
+      )}`
+    );
+
+    // Download composer.json from the remote server
+    const sshDownload1 = await getSshFile({
+      connection: ssh,
+      from: path.join(appPath, "composer.json"),
+      to: path.join(pathConfigs.pathApp, "composer.json"),
+    });
+
+    // If there's download issues then end the connection and return the messages
+    if (sshDownload1 instanceof Error) {
+      ssh.dispose();
+      return handlesetMessage(
+        `Error downloading composer.json\n\n${colourNotice(sshDownload1)}`,
+        "error"
+      );
+    }
+
+    // Download composer.lock from the remote server
+    const sshDownload2 = await getSshFile({
+      connection: ssh,
+      from: path.join(appPath, "composer.lock"),
+      to: path.join(pathConfigs.pathApp, "composer.lock"),
+    });
+    // If there's download issues then end the connection and return the messages
+    if (sshDownload2 instanceof Error) {
+      ssh.dispose();
+      return handlesetMessage(
+        `Error downloading composer.lock\n\n${colourNotice(sshDownload2)}`,
+        "error"
+      );
+    }
+
+    // Close the connection
+    ssh.dispose();
+
+    // Show a success message
+    return handlesetMessage(
+      `Your composer files were updated from ${colourHighlight(host)}`,
+      "success"
+    );
+  },
 };
 
 const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
@@ -186,6 +262,7 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     // If there's anything wrong with the env then return an error
     if (localEnv instanceof Error) return handlesetMessage(localEnv, "error");
     // Add the env to the global state
+    console.log(localEnv);
     setLocalEnv(localEnv);
     // Get the users key we'll be using to connect with
     const user = await resolveUsername();
@@ -219,10 +296,6 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
         stateconfig.server[`${stateconfig.environment}`].port,
         !isEmpty(localEnv.SWIFF_CUSTOM_KEY) ? localEnv.SWIFF_CUSTOM_KEY : null
       )
-    );
-    console.log(
-      checkSshSetup instanceof Error,
-      stateconfig?.server[`${stateconfig?.environment}`]
     );
     // If there's an issue with the connection then give some assistance
     if (checkSshSetup instanceof Error) {
