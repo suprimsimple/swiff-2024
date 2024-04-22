@@ -1,6 +1,6 @@
 import mysql from "promise-mysql";
 import { cmdPromise, isEmpty } from "./utils";
-
+import cmd from "node-cmd";
 // CLI Resources:
 // https://dev.mysql.com/doc/refman/8.0/en/mysql-command-options.html
 // https://mariadb.com/kb/en/library/mysqldump/
@@ -49,11 +49,8 @@ const doImportDb = async (config) => {
   if (errorMessage) return new Error(errorMessage);
 };
 
-const doddevlocalDump = async ({ importFile }) => {
-  const importyDbtolocal = await cmdPromise(
-    `ddev import-db --file=${importFile} && rm ${importFile}`
-  );
-  return importyDbtolocal;
+const doddevlocalDump = async (importFile) => {
+  return cmd.runSync(`ddev import-db --file=${importFile} && rm ${importFile}`);
 };
 
 const doLocalDbDump = async (config) => {

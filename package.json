@@ -1,6 +1,6 @@
 {
   "name": "swiff-4",
-  "version": "3.0.7",
+  "version": "3.0.9",
   "main": "build/index.js",
   "type": "module",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
@@ -21,7 +21,7 @@
     "build": "npm run compile-bundle",
     "postbuild": "node build/index.js",
     "prebuild": "rm -rf build",
-    "prepublish": "npm run build"
+    "pre-publish": "npm run build"
   },
   "keywords": [
     "developer-tools",
@@ -64,6 +64,7 @@
     "node-ssh": "^13.1.0",
     "promise-mysql": "^5.2.0",
     "react": "^18.2.0",
+    "regenerator-runtime": "^0.14.1",
     "update-notifier": "^7.0.0",
     "username": "^7.0.0"
   },

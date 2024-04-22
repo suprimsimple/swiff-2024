@@ -293,7 +293,7 @@ const TaskFunctions = {
     // Check if the user is running ddev, otherwise assume local database
     if (localConfig && localConfig?.ddev === true) {
       const importyDbtolocal = await doddevlocalDump(importFile);
-      if (isEmpty(importyDbtolocal?.data)) {
+      if (!isEmpty(importyDbtolocal?.err)) {
         return handlesetMessage(`${importyDbtolocal?.err}`, "error");
       }
     } else {

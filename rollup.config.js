@@ -41,5 +41,6 @@ export default {
     "cli-spinners",
     "node-ssh",
     "core-js",
+    "regenerator-runtime",
   ],
 };
