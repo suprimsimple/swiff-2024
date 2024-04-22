@@ -274,10 +274,10 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     try {
       // if task is Disabled return
       if (isDisabled(item.value)) return;
-      // Clear message for each task
-      setMessages([]);
       // do not run if task already runnning
       if (isTaskRunning(messages)) return;
+      // Clear message for each task
+      setMessages([]);
       // Headign for start task heading for each task
       handlesetMessage(item?.label, "heading");
       // Performing pre checks
