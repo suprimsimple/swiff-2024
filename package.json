@@ -1,12 +1,13 @@
 {
   "name": "swiff-4",
-  "version": "2.0.0",
+  "version": "2.0.4",
   "main": "build/index.js",
   "type": "module",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
   "devDependencies": {
     "@babel/cli": "^7.24.1",
     "@babel/core": "^7.24.4",
+    "@babel/preset-env": "^7.24.4",
     "@babel/preset-react": "^7.24.1",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
@@ -47,6 +48,7 @@
   "dependencies": {
     "child_process": "^1.0.2",
     "cli-spinners": "^2.9.2",
+    "core-js": "^3.37.0",
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
     "ink": "^4.4.1",
@@ -63,5 +65,8 @@
     "react": "^18.2.0",
     "update-notifier": "^7.0.0",
     "username": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }
