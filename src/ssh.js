@@ -1,12 +1,12 @@
 import { NodeSSH } from "node-ssh";
 import dotenv from "dotenv";
 import { username as resolveUsername } from "username";
-import path from "path";
+import path from "node:path";
 import chalk from "chalk";
-import { executeCommands, cmdPromise, isEmpty } from "./utils";
-import { getDbDumpZipCommands, isMysql8 } from "./database";
-import { colourAttention, colourNotice } from "./colors";
-import { pathConfigs } from "./config";
+import { executeCommands, cmdPromise, isEmpty } from "./utils.js";
+import { getDbDumpZipCommands, isMysql8 } from "./database.js";
+import { colourAttention, colourNotice } from "./colors.js";
+import { pathConfigs } from "./config.js";
 
 const getParsedEnv = (path) => {
   const envFile = dotenv.config({ path: path }).parsed;

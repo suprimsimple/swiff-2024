@@ -5,9 +5,9 @@
 
 // Remote SSH server details
 export default {
-  // Default Environment  staging, production, etc !make sure server consits server with environment name
-  environment: "staging",
-  server: {
+  // Default Environment  staging, production
+  defaultEnvironment: "staging",
+  environments: {
     staging: {
       // The SSH login username
       user: "sterlinghomes",
@@ -37,9 +37,7 @@ export default {
     ddev: true,
   },
   // Folders to upload and sync with the server
-  pushFolders: [
-    // 'public/assets/build'
-  ],
+  pushFolders: ["test"],
   // Folders to pull new or changed files from
   pullFolders: ["templates"],
   disabled: ["databasePush"],

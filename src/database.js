@@ -1,6 +1,6 @@
 import mysql from "promise-mysql";
-import { cmdPromise, isEmpty } from "./utils";
-import cmd from "node-cmd";
+import { cmdPromise, isEmpty } from "./utils.js";
+import cmd from "./components/cmd.js";
 // CLI Resources:
 // https://dev.mysql.com/doc/refman/8.0/en/mysql-command-options.html
 // https://mariadb.com/kb/en/library/mysqldump/

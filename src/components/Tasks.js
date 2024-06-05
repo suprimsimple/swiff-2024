@@ -2,19 +2,20 @@ import React from "react";
 import { Text, Box } from "ink";
 import { Tabs, Tab } from "ink-tab";
 import chalk from "chalk";
-import { exec } from "child_process";
-import SelectInput from "ink-select-input";
+import { exec } from "node:child_process";
+import timersPromises from "timers-promises";
 import { username as resolveUsername } from "username";
-import path from "path";
-import cmd from "node-cmd";
+import path from "node:path";
 import {
   cmdPromise,
   commaAmpersander,
   doesFileExist,
   executeCommands,
+  getMissingPaths,
   isEmpty,
   replaceRsyncOutput,
-} from "../utils";
+  validatePushFolderOptions,
+} from "../utils.js";
 import {
   configFileName,
   createConfig,
@@ -22,8 +23,8 @@ import {
   getConfigIssues,
   pathConfigs,
   setupConfig,
-} from "../config";
-import { getRemoteEnv, setupLocalEnv } from "../env";
+} from "../config.js";
+import { getRemoteEnv, setupLocalEnv } from "../env.js";
 import {
   colourAttention,
   colourDefault,
@@ -31,23 +32,25 @@ import {
   colourMuted,
   colourNotice,
   hexHighlight,
-} from "../colors";
-import MessageTemplate from "./MessageTemplate";
+} from "../colors.js";
+import MessageTemplate from "./MessageTemplate.js";
 import {
   getSshCopyInstructions,
   getSshDatabase,
   getSshFile,
   getSshInit,
   getSshPullCommands,
+  getSshPushCommands,
   getSshTestCommand,
-} from "../ssh";
-import CustomSelectTaskInput from "./CustomSelectTaskInput";
+} from "../ssh.js";
+import CustomSelectTaskInput from "./CustomSelectTaskInput.js";
 import {
   doDropAllDbTables,
   doImportDb,
   doLocalDbDump,
   doddevlocalDump,
-} from "../database";
+} from "../database.js";
+
 // Get the latest task status to check if running
 const isTaskRunning = (messages) => {
   const currentMessage =
@@ -65,7 +68,7 @@ const TaskFunctions = {
     isFlaggedStart,
   }) => {
     const { pullFolders, environment } = stateconfig;
-    const { user, host, appPath, port } = stateconfig.server[`${environment}`]; // get Env
+    const { user, host, appPath, port } = stateconfig.environments[`${environment}`]; // get Env
     // Check if the user has defined some pull folders
     if (!Array.isArray(pullFolders) || isEmpty(pullFolders.filter((i) => i))) {
       return handlesetMessage(
@@ -97,7 +100,7 @@ const TaskFunctions = {
 
     // Get the remote env file via SSH
     const remoteEnv = await getRemoteEnv({
-      serverConfig: stateconfig?.server[`${environment}`],
+      serverConfig: stateconfig?.environments[`${environment}`],
       isInteractive: isFlaggedStart,
       sshKeyPath: statelocalEnv?.SWIFF_CUSTOM_KEY,
     });
@@ -107,7 +110,7 @@ const TaskFunctions = {
       handlesetMessage(
         colourNotice(
           `Consider adding an .env file on the remote server\n   at ${path.join(
-            stateconfig?.server[`${stateconfig?.environment}`]?.appPath,
+            stateconfig?.environments[`${stateconfig?.environment}`]?.appPath,
             ".env"
           )}`
         ),
@@ -159,7 +162,7 @@ const TaskFunctions = {
     isFlaggedStart,
   }) => {
     const { environment } = stateconfig;
-    const { user, host, appPath, port } = stateconfig.server[`${environment}`]; // get Env
+    const { user, host, appPath, port } = stateconfig.environments[`${environment}`]; // get Env
     // Share what's happening with the user
     handlesetWorking(`Backing up your local composer files`);
     // Backup the local composer files this command fail silently if the user doesn’t have composer files locally just yet
@@ -226,9 +229,9 @@ const TaskFunctions = {
     isFlaggedStart,
   }) => {
     // Set some variables for later
-    const { environment } = stateconfig;
-    const { user, host, appPath, port } = stateconfig.server[`${environment}`];
-    const serverConfig = stateconfig.server[`${environment}`];
+    const { defaultEnvironment } = stateconfig;
+    const { user, host, appPath, port } = stateconfig.environments[`${defaultEnvironment}`];
+    const serverConfig = stateconfig.environments[`${defaultEnvironment}`];
     const localConfig = stateconfig?.local;
     const {
       SWIFF_CUSTOM_KEY,
@@ -355,6 +358,126 @@ const TaskFunctions = {
       "success"
     );
   },
+  folderPush: async ({
+    stateconfig,
+    handlesetMessage,
+    stateremoteEnv,
+    statelocalEnv,
+    handlesetWorking,
+    isFlaggedStart,
+  }) => {
+    // Set some variables for later
+    const { defaultEnvironment, pushFolders } = stateconfig;
+    const localEnv = statelocalEnv;
+    const { SWIFF_CUSTOM_KEY } = localEnv;
+    const serverConfig = stateconfig.environments[`${defaultEnvironment}`];
+    const { user, host, appPath, port } = serverConfig;
+    // Get the remote env file via SSH
+    const remoteEnv = await getRemoteEnv({
+      serverConfig,
+      isInteractive: isFlaggedStart,
+      sshKeyPath: SWIFF_CUSTOM_KEY,
+    });
+    // If the env can't be found then show a message
+    if (remoteEnv instanceof Error) {
+      handlesetWorking(
+        colourNotice(
+          `Consider adding an .env file on the remote server\n   at ${path.join(
+            appPath,
+            ".env"
+          )}`
+        )
+      );
+    }
+    // Set the name of the remote environment
+    let remoteEnvironment = "";
+    if (!(remoteEnv instanceof Error))
+      remoteEnvironment = remoteEnv.ENVIRONMENT;
+    // Shame the user if they are pushing to production
+    if (
+      !isEmpty(remoteEnvironment) &&
+      (remoteEnvironment === "production" || remoteEnvironment === "live")
+    )
+      handlesetWorking(
+        colourNotice(
+          `You’re pushing files straight to production,\nplease consider a more reliable way to deploy changes in the future`
+        )
+      );
+    // Create a list of paths to push
+    console.log(pushFolders);
+    if (
+      pushFolders === undefined ||
+      !Array.isArray(pushFolders) ||
+      isEmpty(pushFolders.filter((i) => i))
+    )
+      return handlesetMessage(
+        `First specify some push folders in your ${colourNotice(
+          configFileName
+        )}\n\nFor example:\n\n${colourMuted(
+          `{\n  `
+        )}pushFolders: [ '${colourNotice("templates")}', '${colourNotice(
+          "config"
+        )}', '${colourNotice("public/assets/build")}' ]\n${colourMuted("}")}`,
+        "error"
+      );
+    // Remove empty values from the array so users can’t accidentally upload the entire project
+    const filteredPushFolders = pushFolders?.filter((i) => i);
+    // Check if the defined local paths exist
+    const hasMissingPaths = await getMissingPaths(
+      filteredPushFolders,
+      "pushFolders"
+    );
+    // If any local paths are missing then return the messages
+    if (hasMissingPaths instanceof Error)
+      return handlesetMessage(`${hasMissingPaths}`, "error");
+    // Check if push folder option is valid
+    const isPushFolderOptionsValid = validatePushFolderOptions(
+      filteredPushFolders,
+      "pushFolders"
+    );
+    // If any local paths are missing then return the messages
+    if (isPushFolderOptionsValid instanceof Error)
+      return handlesetMessage(`${isPushFolderOptionsValid}`, "error");
+    // Share what's happening with the user
+    handlesetWorking(
+      `Pushing files in ${commaAmpersander(
+        filteredPushFolders?.map((f) => (typeof f === "string" ? f : f.path))
+      )}`
+    );
+    // Get the rsync push commands
+    const pushCommands = getSshPushCommands({
+      pushFolders: filteredPushFolders,
+      user: user,
+      host: host,
+      port: port,
+      workingDirectory: appPath,
+      sshKeyPath: SWIFF_CUSTOM_KEY,
+    });
+    // Send the commands to the push task
+    const pushStatus = await executeCommands(pushCommands);
+    // Return the result to the user
+    if (pushStatus instanceof Error) {
+      return handlesetWorking(
+        `There was an issue uploading the files\n\n${pushStatus}`,
+        "error"
+      );
+    }
+    const output = replaceRsyncOutput(pushStatus, stateconfig.pushFolders);
+    return handlesetMessage(
+      isEmpty(output)
+        ? `No push required, ${
+            !isEmpty(remoteEnvironment)
+              ? `${colourHighlight(remoteEnvironment)}`
+              : "the remote"
+          } is already up-to-date`
+        : `Success! These are the remote files that changed:\n${output}\n\nThe file push${
+            !isEmpty(remoteEnvironment)
+              ? ` to ${colourHighlight(remoteEnvironment)}`
+              : ""
+          } was successful`,
+      "success"
+    );
+  },
 };
 
 const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
@@ -436,9 +559,9 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     // Check the users SSH key has been added to the server
     const checkSshSetup = await executeCommands(
       getSshTestCommand(
-        stateconfig.server[`${stateconfig.environment}`].user,
-        stateconfig.server[`${stateconfig.environment}`].host,
-        stateconfig.server[`${stateconfig.environment}`].port,
+        stateconfig.environments[`${stateconfig.environment}`].user,
+        stateconfig.environments[`${stateconfig.environment}`].host,
+        stateconfig.environments[`${stateconfig.environment}`].port,
         !isEmpty(localEnv.SWIFF_CUSTOM_KEY) ? localEnv.SWIFF_CUSTOM_KEY : null
       )
     );
@@ -446,14 +569,14 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     if (checkSshSetup instanceof Error) {
       handlesetMessage(
         `A SSH connection couldn’t be made with these details:\n\nServer host: ${
-          stateconfig?.server[`${stateconfig?.environment}`]?.host
+          stateconfig?.environments[`${stateconfig?.environment}`]?.host
         }\nServer user: ${
-          stateconfig?.server[`${stateconfig?.environment}`]?.user
+          stateconfig?.environments[`${stateconfig?.environment}`]?.user
         }\nPort: ${
-          stateconfig?.server[`${stateconfig?.environment}`]?.port
+          stateconfig?.environments[`${stateconfig?.environment}`]?.port
         }\nSSH key: ${sshKey}\n\n${getSshCopyInstructions(
           {
-            server: stateconfig?.server[`${stateconfig?.environment}`],
+            server: stateconfig?.environments[`${stateconfig?.environment}`],
           },
           sshKey
         )}\n\n${
@@ -471,7 +594,7 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
 
   const handleEndTask = () => {
     if (!isTaskRunning(messages) && isFlaggedStart) {
-      setTimeout(() => process.exit(), 500);
+      timersPromises.setTimeout(() => process.exit(), 500);
     }
   };
   const handlesetMessage = (message, type = "message") => {

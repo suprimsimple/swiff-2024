@@ -1,10 +1,11 @@
-import path from "path";
-import { promisify } from "util";
+import path from "node:path";
+import { promisify } from "node:util";
 import { isEmpty } from "lodash-es";
 import fs from "fs-extra";
-import { exec } from "child_process";
-import cmd from "node-cmd";
-import { colourHighlight, colourAttention } from "./colors";
+// import { exec } from "child_process";
+import { exec } from "node:child_process";
+import cmd from "./components/cmd.js";
+import { colourHighlight, colourAttention } from "./colors.js";
 const execPromise = promisify(exec);
 const cmdPromise = async (config) => cmd.runSync(config);
 

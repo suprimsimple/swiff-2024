@@ -1,7 +1,8 @@
 import React from "react";
 import { Text } from "ink";
-import { hexDefault, hexHighlight, hexMuted } from "../colors";
 import Spinner from "ink-spinner";
+import { hexDefault, hexHighlight, hexMuted } from "../colors.js";
+
 const ItemComponent = ({
   value: id,
   label: title,

@@ -2,20 +2,17 @@
  * Swiff Project Configuration
  * Head to 'https://github.com/simple-integrated-marketing/swiff' for further information.
  */
-
 // Remote SSH server details
 export default {
-  // set Default Environment  staging, production, etc !make sure server consits server with environment name
-  environment: "staging",
-  server: {
+  // set Default Environment  | staging or production
+  defaultEnironment: "staging",
+  environments: {
     staging: {
       // The SSH login username
       user: "",
-      // The IP/hostname of the remote server
-      // host: '100.100.100.100',
+      // The IP/hostname of the remote server |  host: '100.100.100.100',
       host: "",
-      // The working directory of the remote app folder
-      // appPath: '/srv/users/[user]/apps/[app]',
+      // The working directory of the remote app folder |  appPath: '/srv/users/[user]/apps/[app]',
       appPath: "",
       // The SSH port to connect on (22 is the SSH default)
       port: 22,
@@ -23,11 +20,9 @@ export default {
     production: {
       // The SSH login username
       user: "",
-      // The IP/hostname of the remote server
-      // host: '100.100.100.100',
+      // The IP/hostname of the remote server | host: '100.100.100.100',
       host: "",
-      // The working directory of the remote app folder
-      // appPath: '/srv/users/[user]/apps/[app]',
+      // The working directory of the remote app folder | appPath: '/srv/users/[user]/apps/[app]',
       appPath: "",
       // The SSH port to connect on (22 is the SSH default)
       port: 22,
@@ -39,8 +34,8 @@ export default {
   // Folders to upload and sync with the server
   pushFolders: [
     // 'templates',
-    // 'config',
-    // 'public/assets/build'
+    // { path: "config", exclude: "/project/*" },
+    // 'public/dist'
   ],
   // Folders to pull new or changed files from
   pullFolders: [

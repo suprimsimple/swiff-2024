@@ -1,10 +1,10 @@
 import fs from "fs-extra";
 import dotenv from "dotenv";
-import path from "path";
-import { isEmpty } from "./utils";
-import { colourNotice } from "./colors";
-import { getSshEnv } from "./ssh";
-import { pathConfigs } from "./config";
+import path from "node:path";
+import { isEmpty } from "./utils.js";
+import { colourNotice } from "./colors.js";
+import { getSshEnv } from "./ssh.js";
+import { pathConfigs } from "./config.js";
 
 const createEnv = (
   fromPath = pathConfigs.pathLocalEnvTemplate,
@@ -56,17 +56,9 @@ const getEnvIssues = (
 ) => {
   // Loop over the array and match against the keys in the users env
   const missingSettings = requiredSettings.filter(
-    (setting) =>
-      !(setting in env) ||
-      // Make sure there's an environment defined
-      (setting === "ENVIRONMENT" && isEmpty(env[setting])) ||
-      // Make sure there's a server defined
-      (setting === "DB_SERVER" && isEmpty(env[setting])) ||
-      // Make sure there's a user defined
-      (setting === "DB_USER" && isEmpty(env[setting])) ||
-      // Make sure there's a database defined
-      (setting === "DB_DATABASE" && isEmpty(env[setting]))
+    (setting) => !setting in env || !`CRAFT_${setting}` in env
   );
+  console.log(missingSettings);
   // Return the error if any
   return isEmpty(missingSettings)
     ? ""
@@ -81,7 +73,7 @@ const getEnvIssues = (
               isEnvMissing ? ` new` : ""
             } project .env:\n${colourNotice(pathConfigs?.pathLocalEnv)}`
       }\n\n${missingSettings
-        .map((s) => `${s}="${colourNotice(`value`)}"`)
+        .map((s) => `${s} or CRAFT_${s}="${colourNotice(`value`)}" `)
         .join("\n")}${
         isInteractive ? `\n\nThen hit [ enter ↵ ] to rerun this task` : ""
       }`;

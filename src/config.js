@@ -1,9 +1,9 @@
 import fs from "fs-extra";
-import path from "path";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { appDirectory, resolveApp } from "./utils";
+import { appDirectory, resolveApp } from "./utils.js";
 // import { createRequire } from "node:module";
-import { colourNotice } from "./colors";
+import { colourNotice } from "./colors.js";
 // const require = createRequire(import.meta.url);
 export const configFileName = "swiff.config.js";
 const __filename = fileURLToPath(import.meta.url);
@@ -61,7 +61,7 @@ const getConfigIssues = (config, hasNewConfig, isInteractive = false) => {
     "server.port",
   ];
   // Loop over the array and match against the keys in the users config
-  const missingSettings = Object.values(config.server[`${config?.environment}`])
+  const missingSettings = Object.values(config.environments[`${config?.environment}`])
     ?.map((item) => item == undefined || item.length <= 0)
     .includes(true);
   // Return the error if any

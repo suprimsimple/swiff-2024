@@ -1,8 +1,8 @@
 import React from "react";
 import { Text } from "ink";
 import SelectInput from "ink-select-input";
-import { hexHighlight } from "../colors";
-import ItemComponent from "./ItemComponent";
+import { hexHighlight } from "../colors.js";
+import ItemComponent from "./ItemComponent.js";
 
 const CustomSelectTaskInput = ({
   items,

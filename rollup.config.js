@@ -1,7 +1,11 @@
 import json from "@rollup/plugin-json";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
+import terser from "@rollup/plugin-terser";
 import commonjs from "@rollup/plugin-commonjs";
 import { babel } from "@rollup/plugin-babel";
+import nodePolyfills from "rollup-plugin-polyfill-node";
+
+
 export default {
   input: "src/index.js",
   output: {
@@ -9,14 +13,16 @@ export default {
     format: "es",
   },
   plugins: [
-    nodeResolve(),
     babel({
       babelHelpers: "bundled",
-      ignore: ["node_modules"],
+      exclude: "node_modules/**",
       presets: ["@babel/preset-env", "@babel/preset-react"],
     }),
-    commonjs(),
     json(),
+    commonjs(),
+    terser(),
+    nodeResolve(),
+    nodePolyfills(),
   ],
   external: [
     "react",
@@ -27,20 +33,17 @@ export default {
     "ink-task-list",
     "chalk",
     "ssh2",
-    "node-ssh",
     "lodash-es",
     "lodash.get",
-    "node-cmd",
     "promise-mysql",
     "dotenv",
     "username",
     "update-notifier",
     "fs-extra",
     "ink-big-text",
-    "child_process",
     "cli-spinners",
     "node-ssh",
-    "core-js",
-    "regenerator-runtime",
+    "timers-promises",
+    "semver",
   ],
 };

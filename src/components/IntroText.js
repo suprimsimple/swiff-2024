@@ -4,7 +4,7 @@ import { Text, Box } from "ink";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
-import { hexNotice } from "../colors";
+import { hexNotice } from "../colors.js";
 const IntroTitle = () => {
   return (
     <>
@@ -15,7 +15,7 @@ const IntroTitle = () => {
 
 const IntroText = ({ stateconfig }) => {
   return (
-    <React.Fragment>
+    <>
       <IntroTitle />
       <Text dimColor>Version {` ${pkg?.version}`}</Text>
       <Box marginBottom={1} flexDirection="column">
@@ -24,26 +24,26 @@ const IntroText = ({ stateconfig }) => {
             <Text>🤌 </Text> Environment:{" "}
           </Text>
           <Text bold color={hexNotice}>
-            {stateconfig?.environment} |
-            {stateconfig && stateconfig["server"][`${stateconfig?.environment}`]
+            {stateconfig?.defaultEnvironment} |
+            {stateconfig && stateconfig["environments"][`${stateconfig?.defaultEnvironment}`]
               ? null
-              : ` 💩 sever not found for the ${stateconfig?.environment}`}
+              : ` 💩 sever not found for the ${stateconfig?.defaultEnvironment}`}
             {stateconfig &&
-              stateconfig["server"] &&
-              stateconfig["server"][`${stateconfig?.environment}`] &&
+              stateconfig["environments"] &&
+              stateconfig["environments"][`${stateconfig?.defaultEnvironment}`] &&
               ` ${
-                stateconfig["server"][`${stateconfig?.environment}`]?.user != ""
-                  ? stateconfig["server"][`${stateconfig?.environment}`]?.user
+                stateconfig["environments"][`${stateconfig?.defaultEnvironment}`]?.user != ""
+                  ? stateconfig["environments"][`${stateconfig?.defaultEnvironment}`]?.user
                   : " USER"
               }@${
-                stateconfig["server"][`${stateconfig?.environment}`]?.host != ""
-                  ? stateconfig["server"][`${stateconfig?.environment}`]?.host
+                stateconfig["environments"][`${stateconfig?.defaultEnvironment}`]?.host != ""
+                  ? stateconfig["environments"][`${stateconfig?.defaultEnvironment}`]?.host
                   : "HOST"
               } `}
           </Text>
         </Text>
       </Box>
-    </React.Fragment>
+    </>
   );
 };
 

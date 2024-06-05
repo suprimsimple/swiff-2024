@@ -30,6 +30,7 @@ You can specify a custom SSH key path in your .env file with:<br>
 - Disable specific tasks: Specify the tasks to disable with a config setting
 
 ## Requirements
+This plugin requires an LTS Node version (v16.0.0+).
 filename: ```swiff.config.js``` add to root of your application.
 ```js
 /**
@@ -39,8 +40,8 @@ filename: ```swiff.config.js``` add to root of your application.
 // Remote SSH server details
 export default {
   // set Default Environment  staging, production, etc !make sure server config consits with environment name
-  environment: "staging",
-  server: {
+  defaultEnvironment: "staging",
+  environments: {
     staging: {
       // The SSH login username
       user: "",
