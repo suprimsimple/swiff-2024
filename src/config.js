@@ -61,13 +61,13 @@ const getConfigIssues = (config, hasNewConfig, isInteractive = false) => {
     "server.port",
   ];
   // Loop over the array and match against the keys in the users config
-  const missingSettings = Object.values(config.environments[`${config?.environment}`])
-    ?.map((item) => item == undefined || item.length <= 0)
+  const missingSettings = Object.values(config?.environments[`${config?.defaultEnvironment}`])
+    ?.map((item) => item == undefined)
     .includes(true);
   // Return the error if any
   return missingSettings
     ? `Add the following ${
-        requiredSettings.length > 1 ? "values" : "value"
+        requiredSettings?.length > 1 ? "values" : "value"
       } to your ${
         hasNewConfig
           ? `new config:\n${colourNotice(pathConfigs.pathConfig)}`

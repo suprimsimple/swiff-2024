@@ -67,8 +67,9 @@ const TaskFunctions = {
     handlesetWorking,
     isFlaggedStart,
   }) => {
-    const { pullFolders, environment } = stateconfig;
-    const { user, host, appPath, port } = stateconfig.environments[`${environment}`]; // get Env
+    const { pullFolders, defaultEnvironment } = stateconfig;
+    const { user, host, appPath, port } = stateconfig.environments[`${defaultEnvironment}`]; // get Env
+
     // Check if the user has defined some pull folders
     if (!Array.isArray(pullFolders) || isEmpty(pullFolders.filter((i) => i))) {
       return handlesetMessage(
@@ -82,12 +83,16 @@ const TaskFunctions = {
       );
     }
     // Remove empty values from the array so the user can’t accidentally download the entire remote
-    const filteredPullFolders = pullFolders?.filter((i) => i);
+    let filteredPullFolders = pullFolders?.filter((i) => i);
+    // Override Push or Pull Folders is set 
+    if(stateconfig?.environments[`${defaultEnvironment}`]?.pullFolders){
+      console.log(stateconfig?.environments[`${defaultEnvironment}`]?.pullFolders?.filter((i) => i))
+      filteredPullFolders = stateconfig?.environments[`${defaultEnvironment}`]?.pullFolders?.filter((i) => i);
+    }
     // Share what's happening with the user
     handlesetWorking(
       `Pulling files from ${commaAmpersander(filteredPullFolders)}`
     );
-
     // Create the rsync commands required to pull the files
     const pullCommands = getSshPullCommands({
       pullFolders: filteredPullFolders,
@@ -100,7 +105,7 @@ const TaskFunctions = {
 
     // Get the remote env file via SSH
     const remoteEnv = await getRemoteEnv({
-      serverConfig: stateconfig?.environments[`${environment}`],
+      serverConfig: stateconfig?.environments[`${defaultEnvironment}`],
       isInteractive: isFlaggedStart,
       sshKeyPath: statelocalEnv?.SWIFF_CUSTOM_KEY,
     });
@@ -110,7 +115,7 @@ const TaskFunctions = {
       handlesetMessage(
         colourNotice(
           `Consider adding an .env file on the remote server\n   at ${path.join(
-            stateconfig?.environments[`${stateconfig?.environment}`]?.appPath,
+            stateconfig?.environments[`${defaultEnvironment}`]?.appPath,
             ".env"
           )}`
         ),
@@ -404,7 +409,6 @@ const TaskFunctions = {
         )
       );
     // Create a list of paths to push
-    console.log(pushFolders);
     if (
       pushFolders === undefined ||
       !Array.isArray(pushFolders) ||
@@ -500,7 +504,7 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     // If there's any missing config options then open the config file and show the error
     const missingConfigSettings = getConfigIssues(
       {
-        environment: stateconfig?.environment,
+        defaultEnvironment: stateconfig?.defaultEnvironment,
         ...config,
       },
       !doesConfigExist,
@@ -513,12 +517,12 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     // Add/Update the config to the global state
     setConfig(() => {
       return {
-        environment: stateconfig?.environment, // Don't change environment after state selected
-        local: config.local,
-        pushFolders: config.pushFolders,
-        pullFolders: config.pullFolders,
-        disabled: config.disabled,
-        server: config.server,
+        defaultEnvironment: stateconfig?.defaultEnvironment,
+        local: config?.local,
+        pushFolders: config?.pushFolders,
+        pullFolders: config?.pullFolders,
+        disabled: config?.disabled,
+        environments: config?.environments,
       };
     });
     // Get the users env file
@@ -559,9 +563,9 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     // Check the users SSH key has been added to the server
     const checkSshSetup = await executeCommands(
       getSshTestCommand(
-        stateconfig.environments[`${stateconfig.environment}`].user,
-        stateconfig.environments[`${stateconfig.environment}`].host,
-        stateconfig.environments[`${stateconfig.environment}`].port,
+        stateconfig?.environments[`${stateconfig?.defaultEnvironment}`].user,
+        stateconfig?.environments[`${stateconfig?.defaultEnvironment}`].host,
+        stateconfig?.environments[`${stateconfig?.defaultEnvironment}`].port,
         !isEmpty(localEnv.SWIFF_CUSTOM_KEY) ? localEnv.SWIFF_CUSTOM_KEY : null
       )
     );
@@ -569,14 +573,14 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     if (checkSshSetup instanceof Error) {
       handlesetMessage(
         `A SSH connection couldn’t be made with these details:\n\nServer host: ${
-          stateconfig?.environments[`${stateconfig?.environment}`]?.host
+          stateconfig?.environments[`${stateconfig?.defaultEnvironment}`]?.host
         }\nServer user: ${
-          stateconfig?.environments[`${stateconfig?.environment}`]?.user
+          stateconfig?.environments[`${stateconfig?.defaultEnvironment}`]?.user
         }\nPort: ${
-          stateconfig?.environments[`${stateconfig?.environment}`]?.port
+          stateconfig?.environments[`${stateconfig?.defaultEnvironment}`]?.port
         }\nSSH key: ${sshKey}\n\n${getSshCopyInstructions(
           {
-            server: stateconfig?.environments[`${stateconfig?.environment}`],
+            server: stateconfig?.environments[`${stateconfig?.defaultEnvironment}`],
           },
           sshKey
         )}\n\n${
@@ -591,7 +595,6 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
     }
     return { localEnv };
   };
-
   const handleEndTask = () => {
     if (!isTaskRunning(messages) && isFlaggedStart) {
       timersPromises.setTimeout(() => process.exit(), 500);
@@ -637,7 +640,7 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
       if (!TaskFunctions[`${item.value}`]) {
         return handlesetMessage(`No function found `, "error");
       }
-      // if exist start the chosen task
+      // // if exist start the chosen task
       await TaskFunctions[`${item.value}`]({
         stateconfig,
         stateremoteEnv,
@@ -652,7 +655,15 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
       console.log(error);
     }
   };
-
+  const handleTabChange = (name) => {
+    if (isTaskRunning(messages)) {
+      return false;
+    }
+    if (messages.length > 0) {
+      setMessages([]);
+    }
+    setActiveTab(name);
+  };
   const pullitems = [
     {
       label: "Folder Pull",
@@ -700,15 +711,8 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
       value: "termninal",
     },
   ];
-  const handleTabChange = (name) => {
-    if (isTaskRunning(messages)) {
-      return false;
-    }
-    if (messages.length > 0) {
-      setMessages([]);
-    }
-    setActiveTab(name);
-  };
+
+
   return (
     <Box flexDirection="column">
       <Tabs

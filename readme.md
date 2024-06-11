@@ -1,3 +1,5 @@
+NOTE: Currently in Development (Will merge to Swiff after approval)
+
 # Swiff 2024
 Swiff saves you time with common SSH tasks during the development of websites/apps
 
@@ -63,7 +65,7 @@ export default {
   pushFolders: [
     // 'templates',
     // 'config',
-    // 'public/assets/build'
+    // { path: "config", exclude: "/project/*" },
   ],
   // Folders to pull new or changed files from
   pullFolders: [

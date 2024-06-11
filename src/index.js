@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import chalk from "chalk";
 import SelectInput from "ink-select-input";
-// import updateNotifier from "update-notifier";
+import updateNotifier from "update-notifier";
 import { hexHighlight } from "./colors.js";
 import { doesFileExist } from "./utils.js";
 import { lt } from "semver";
@@ -12,9 +12,11 @@ import { getConfig, pathConfigs } from "./config.js";
 import IntroText from "./components/IntroText.js";
 import Tasks from "./components/Tasks.js";
 import ItemComponent from "./components/ItemComponent.js";
-
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json");
 // Start with a blank slate
-// console.clear();
+console.clear();
 
 // Check Version
 if (lt(process.version, "16.19.0")) {
@@ -29,7 +31,7 @@ if (lt(process.version, "16.19.0")) {
 }
 
 // package update
-// updateNotifier({ pkg: pkg }).notify();
+updateNotifier({ pkg: pkg }).notify();
 
 const App = () => {
   const [envOptions, setEnvOptions] = useState([]);
@@ -41,7 +43,6 @@ const App = () => {
     stateconfig?.disabled.includes(taskId);
   const handleSelectEnv = async (value) => {
     setselectedEnv(true);
-
     setConfig((config) => {
       return {
         defaultEnvironment: `${value}`,

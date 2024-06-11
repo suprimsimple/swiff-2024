@@ -58,7 +58,6 @@ const getEnvIssues = (
   const missingSettings = requiredSettings.filter(
     (setting) => !setting in env || !`CRAFT_${setting}` in env
   );
-  console.log(missingSettings);
   // Return the error if any
   return isEmpty(missingSettings)
     ? ""

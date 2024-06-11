@@ -8,7 +8,7 @@ import { hexNotice } from "../colors.js";
 const IntroTitle = () => {
   return (
     <>
-      <BigText text="Swiff 2024" space={true} />
+      <BigText font="tiny"  text="Swiff 2024" space={false}  />
     </>
   );
 };
@@ -16,9 +16,13 @@ const IntroTitle = () => {
 const IntroText = ({ stateconfig }) => {
   return (
     <>
-      <IntroTitle />
-      <Text dimColor>Version {` ${pkg?.version}`}</Text>
-      <Box marginBottom={1} flexDirection="column">
+     <Box marginTop={0.5} marginBottom={0.2} flexDirection="column">
+        <IntroTitle />
+        <Box marginTop={0.3} alignItems="flex-end" justifyContent="flex-end">
+        <Text dimColor> version {` ${pkg?.version}`}</Text>
+        </Box>
+     </Box>
+      <Box marginTop={0.3} marginBottom={1} flexDirection="column">
         <Text color="#ffffff">
           <Text color="#ffffff">
             <Text>🤌 </Text> Environment:{" "}

@@ -19,10 +19,11 @@ export default {
       appPath: "/srv/users/sterlinghomes/apps/sterlinghomes",
       // The SSH port to connect on (22 is the SSH default)
       port: 22,
+      // To Override Push or Pull Folders for environment add pushFolders | pullFolders
     },
     production: {
       // The SSH login username
-      user: "sterlinghomes-production",
+      user: "sterlinghomes",
       // The IP/hostname of the remote server
       // host: '100.100.100.100',
       host: "139.180.178.70",

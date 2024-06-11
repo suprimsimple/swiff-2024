@@ -8,24 +8,18 @@ export default {
   defaultEnironment: "staging",
   environments: {
     staging: {
-      // The SSH login username
-      user: "",
-      // The IP/hostname of the remote server |  host: '100.100.100.100',
-      host: "",
-      // The working directory of the remote app folder |  appPath: '/srv/users/[user]/apps/[app]',
-      appPath: "",
-      // The SSH port to connect on (22 is the SSH default)
-      port: 22,
+      user: "",    // The SSH login username
+      host: "",   // The IP/hostname of the remote server |  host: '100.100.100.100',
+      appPath: "",    // The working directory of the remote app folder |  appPath: '/srv/users/[user]/apps/[app]',
+      port: 22,// The SSH port to connect on (22 is the SSH default)
+      // To Override Push or Pull Folders for environment add pushFolders | pullFolders
     },
     production: {
-      // The SSH login username
-      user: "",
-      // The IP/hostname of the remote server | host: '100.100.100.100',
-      host: "",
-      // The working directory of the remote app folder | appPath: '/srv/users/[user]/apps/[app]',
-      appPath: "",
-      // The SSH port to connect on (22 is the SSH default)
-      port: 22,
+      user: "",    // The SSH login username
+      host: "",  // The IP/hostname of the remote server | host: '100.100.100.100',
+      appPath: "",     // The working directory of the remote app folder | appPath: '/srv/users/[user]/apps/[app]',
+      port: 22, // The SSH port to connect on (22 is the SSH default)
+       // To Override Push or Pull Folders for environment add pushFolders | pullFolders
     },
   },
   local: {
