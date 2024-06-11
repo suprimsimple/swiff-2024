@@ -5,7 +5,6 @@ import commonjs from "@rollup/plugin-commonjs";
 import { babel } from "@rollup/plugin-babel";
 import nodePolyfills from "rollup-plugin-polyfill-node";
 
-
 export default {
   input: "src/index.js",
   output: {
@@ -45,5 +44,7 @@ export default {
     "node-ssh",
     "timers-promises",
     "semver",
+    "pino",
+    "pino-pretty"
   ],
 };

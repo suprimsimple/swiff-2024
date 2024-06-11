@@ -15,6 +15,9 @@ Move composer files between servers (auto backup)
 💻 **Remote terminal connection**<br>
 Launch a SSH session directly into the remote site/app folder
 
+💻 **Logger**<br>
+```swiff.log``` available to see all logs 
+
 ## Getting started
 
 1. Install Swiff globally with npm:<br>

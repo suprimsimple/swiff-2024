@@ -6,6 +6,7 @@ import { exec } from "node:child_process";
 import timersPromises from "timers-promises";
 import { username as resolveUsername } from "username";
 import path from "node:path";
+import logger from "../logger.js";
 import {
   cmdPromise,
   commaAmpersander,
@@ -145,6 +146,7 @@ const TaskFunctions = {
       );
     }
     const output = replaceRsyncOutput(pullStatus, filteredPullFolders);
+    logger.info(`${output}`)
     return handlesetMessage(
       isEmpty(output)
         ? `No pull required, ${colourHighlight(
@@ -640,6 +642,8 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
       if (!TaskFunctions[`${item.value}`]) {
         return handlesetMessage(`No function found `, "error");
       }
+      const user = await resolveUsername();
+      logger.info(`${user} started Task : ${item.value}`);
       // // if exist start the chosen task
       await TaskFunctions[`${item.value}`]({
         stateconfig,
