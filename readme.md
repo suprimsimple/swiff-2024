@@ -21,7 +21,7 @@ Launch a SSH session directly into the remote site/app folder
 ## Getting started
 
 1. Install Swiff globally with npm:<br>
-`npm install --global swiff-4`
+`npm install --global swiff-4@latest`
 
 2. Run
 `swiff-4`
@@ -44,22 +44,27 @@ filename: ```swiff.config.js``` add to root of your application.
  */
 // Remote SSH server details
 export default {
-  // set Default Environment  staging, production, etc !make sure server config consits with environment name
+  // set Default Environment  | staging or production
   defaultEnvironment: "staging",
+  logging:{
+    enabled: true,      // Logging Enabled default
+    //   target: '/'   // example  target: "./logs/" (from root folder)
+  },
   environments: {
     staging: {
-      // The SSH login username
-      user: "",
-      // The IP/hostname of the remote server
-      // host: '100.100.100.100',
-      host: "",
-      // The working directory of the remote app folder
-      // appPath: '/srv/users/[user]/apps/[app]',
-      appPath: "",
-      // The SSH port to connect on (22 is the SSH default)
-      port: 22,
+      user: "",    // The SSH login username
+      host: "",   // The IP/hostname of the remote server |  host: '100.100.100.100',
+      appPath: "",    // The working directory of the remote app folder |  appPath: '/srv/users/[user]/apps/[app]',
+      port: 22,// The SSH port to connect on (22 is the SSH default)
+      // To override Push or Pull Folders for specific environment add pushFolders | pullFolders
     },
-
+    production: {
+      user: "",    // The SSH login username
+      host: "",  // The IP/hostname of the remote server | host: '100.100.100.100',
+      appPath: "",     // The working directory of the remote app folder | appPath: '/srv/users/[user]/apps/[app]',
+      port: 22, // The SSH port to connect on (22 is the SSH default)
+       // To Override Push or Pull Folders for environment add pushFolders | pullFolders
+    },
   },
   local: {
     ddev: true,
@@ -67,8 +72,8 @@ export default {
   // Folders to upload and sync with the server
   pushFolders: [
     // 'templates',
-    // 'config',
     // { path: "config", exclude: "/project/*" },
+    // 'public/dist'
   ],
   // Folders to pull new or changed files from
   pullFolders: [

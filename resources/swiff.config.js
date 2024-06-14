@@ -3,9 +3,11 @@
  * Head to 'https://github.com/simple-integrated-marketing/swiff' for further information.
  */
 // Remote SSH server details
+/** @typedef {import("./resources/swiff.config").Config}  Config */
+/** @type {Config} */
 export default {
   // set Default Environment  | staging or production
-  defaultEnironment: "staging",
+  defaultEnvironment: "staging",
   logging:{
     enabled: true,      // Logging Enabled default
     //   target: '/'   // example  target: "./logs/"
