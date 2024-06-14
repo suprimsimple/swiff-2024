@@ -47,8 +47,7 @@ const getConfig = async () => {
     const configModule = await import(configPath);
     return configModule.default;
   } catch (error) {
-    console.error("Error loading config:", error);
-    throw error;
+    process.exit();
   }
 };
 

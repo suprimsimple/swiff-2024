@@ -1,6 +1,6 @@
 {
   "name": "swiff-4",
-  "version": "4.0.9",
+  "version": "5.0.1",
   "main": "build/index.js",
   "type": "module",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",

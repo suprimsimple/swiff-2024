@@ -8,7 +8,7 @@ import updateNotifier from "update-notifier";
 import { hexHighlight } from "./colors.js";
 import { doesFileExist } from "./utils.js";
 import { lt } from "semver";
-import { getConfig, pathConfigs } from "./config.js";
+import { createConfig, getConfig, pathConfigs } from "./config.js";
 import IntroText from "./components/IntroText.js";
 import Tasks from "./components/Tasks.js";
 import ItemComponent from "./components/ItemComponent.js";
@@ -59,11 +59,13 @@ const App = () => {
       try {
         const doesConfigExist = await doesFileExist(pathConfigs.pathConfig);
         if (!doesConfigExist) {
-          return
+          await createConfig();
+          process.exit()  
         }
         const config = await getConfig();
         if (!config) {
-            return
+            console.log(chalk.red.bold("❌ No config found, please check your root folder."));
+            process.exit()  
         }
         setConfig(config);
         setselectedEnv(false);
