@@ -2,12 +2,18 @@ import fs from "fs-extra";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { appDirectory, resolveApp } from "./utils.js";
-// import { createRequire } from "node:module";
+import { createRequire } from "node:module";
 import { colourNotice } from "./colors.js";
-// const require = createRequire(import.meta.url);
-export const configFileName = "swiff.config.js";
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json");
+
+
+export const configFileName =   pkg.type === 'module' ? 'swiff.config.js' : 'swiff.config.cjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
+
 export const pathConfigs = {
   pathApp: resolveApp(""),
   pathConfig: resolveApp(`${configFileName}`),
