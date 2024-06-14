@@ -6,13 +6,17 @@
 export default {
   // set Default Environment  | staging or production
   defaultEnironment: "staging",
+  logging:{
+    enabled: true,      // Logging Enabled default
+    //   target: '/'   // example  target: "./logs/"
+  },
   environments: {
     staging: {
       user: "",    // The SSH login username
       host: "",   // The IP/hostname of the remote server |  host: '100.100.100.100',
       appPath: "",    // The working directory of the remote app folder |  appPath: '/srv/users/[user]/apps/[app]',
       port: 22,// The SSH port to connect on (22 is the SSH default)
-      // To Override Push or Pull Folders for environment add pushFolders | pullFolders
+      // To override Push or Pull Folders for specific environment add pushFolders | pullFolders
     },
     production: {
       user: "",    // The SSH login username

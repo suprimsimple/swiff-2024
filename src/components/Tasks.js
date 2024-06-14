@@ -146,7 +146,7 @@ const TaskFunctions = {
       );
     }
     const output = replaceRsyncOutput(pullStatus, filteredPullFolders);
-    logger.info(`${output}`)
+    logger.info(`${pullStatus}`)
     return handlesetMessage(
       isEmpty(output)
         ? `No pull required, ${colourHighlight(
@@ -157,211 +157,6 @@ const TaskFunctions = {
               ? ` from ${colourHighlight(remoteEnvironment)}`
               : ""
           } was successful`,
-      "success"
-    );
-  },
-  composerPull: async ({
-    stateconfig,
-    handlesetMessage,
-    stateremoteEnv,
-    statelocalEnv,
-    handlesetWorking,
-    isFlaggedStart,
-  }) => {
-    const { environment } = stateconfig;
-    const { user, host, appPath, port } = stateconfig.environments[`${environment}`]; // get Env
-    // Share what's happening with the user
-    handlesetWorking(`Backing up your local composer files`);
-    // Backup the local composer files this command fail silently if the user doesn’t have composer files locally just yet
-    await executeCommands(
-      `cp composer.json ${pathConfigs.pathBackups}/${statelocalEnv?.DB_DATABASE}-local-composer.json && cp composer.lock ${pathConfigs.pathBackups}/${statelocalEnv?.DB_DATABASE}-local-composer.lock`
-    );
-    // Connect to the remote server
-    const ssh = await getSshInit({
-      host: host,
-      user: user,
-      port: port,
-      sshKeyPath: statelocalEnv?.SWIFF_CUSTOM_KEY,
-    });
-    // If there's connection issues then return the messages
-    if (ssh instanceof Error) return handlesetMessage(`${ssh}`, "error");
-    // Share what's happening with the user
-    handlesetWorking(
-      `Fetching the composer files from the remote server at ${colourHighlight(
-        host
-      )}`
-    );
-    // Download composer.json from the remote server
-    const sshDownload1 = await getSshFile({
-      connection: ssh,
-      from: path.join(appPath, "composer.json"),
-      to: path.join(pathConfigs.pathApp, "composer.json"),
-    });
-    // If there's download issues then end the connection and return the messages
-    if (sshDownload1 instanceof Error) {
-      ssh.dispose();
-      return handlesetMessage(
-        `Error downloading composer.json\n\n${colourNotice(sshDownload1)}`,
-        "error"
-      );
-    }
-    // Download composer.lock from the remote server
-    const sshDownload2 = await getSshFile({
-      connection: ssh,
-      from: path.join(appPath, "composer.lock"),
-      to: path.join(pathConfigs.pathApp, "composer.lock"),
-    });
-    // If there's download issues then end the connection and return the messages
-    if (sshDownload2 instanceof Error) {
-      ssh.dispose();
-      return handlesetMessage(
-        `Error downloading composer.lock\n\n${colourNotice(sshDownload2)}`,
-        "error"
-      );
-    }
-    // Close the connection
-    ssh.dispose();
-    // Show a success message
-    return handlesetMessage(
-      `Your composer files were updated from ${colourHighlight(host)}`,
-      "success"
-    );
-  },
-  databasePull: async ({
-    stateconfig,
-    handlesetMessage,
-    stateremoteEnv,
-    statelocalEnv,
-    handlesetWorking,
-    isFlaggedStart,
-  }) => {
-    // Set some variables for later
-    const { defaultEnvironment } = stateconfig;
-    const { user, host, appPath, port } = stateconfig.environments[`${defaultEnvironment}`];
-    const serverConfig = stateconfig.environments[`${defaultEnvironment}`];
-    const localConfig = stateconfig?.local;
-    const {
-      SWIFF_CUSTOM_KEY,
-      DB_SERVER,
-      DB_PORT,
-      DB_DATABASE,
-      DB_USER,
-      DB_PASSWORD,
-    } = statelocalEnv;
-    // Get the remote env file via SSH
-    const remoteEnv = await getRemoteEnv({
-      serverConfig: serverConfig,
-      isInteractive: isFlaggedStart,
-      sshKeyPath: SWIFF_CUSTOM_KEY,
-    });
-    // If the env can't be found then return a message
-    if (remoteEnv instanceof Error) return handlesetMessage(remoteEnv);
-    // Share what's happening with the user
-    handlesetWorking(
-      `Fetching ${colourHighlight(
-        remoteEnv?.DB_DATABASE
-      )} from ${colourHighlight(remoteEnv?.ENVIRONMENT)}`
-    );
-    // Set the remote database variables
-    const remoteDbName = `${remoteEnv?.DB_DATABASE}-remote.sql`;
-    const remoteDbNameZipped = `${remoteDbName}.gz`;
-    const importFile = `${pathConfigs.pathBackups}/${remoteDbName}`;
-    // Download and store the remote DB via SSH
-    const dbSsh = await getSshDatabase({
-      remoteEnv: remoteEnv,
-      host: serverConfig.host,
-      user: serverConfig.user,
-      port: serverConfig.port,
-      sshAppPath: serverConfig.appPath,
-      gzipFileName: remoteDbNameZipped,
-      sshKeyPath: SWIFF_CUSTOM_KEY,
-      unzip: true,
-    });
-    // If there's any env issues then return the messages
-    if (dbSsh instanceof Error) return handlesetMessage(dbSsh, "error");
-    // Backup the existing local database
-    const localBackupFilePath = `${pathConfigs.pathBackups}/${DB_DATABASE}-local.sql.gz`;
-    const localDbDump = await doLocalDbDump({
-      host: DB_SERVER,
-      port: DB_PORT,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      database: DB_DATABASE,
-      gzipFilePath: localBackupFilePath,
-    });
-    // If there's any local db backup issues then return the messages
-    if (localDbDump instanceof Error) {
-      return handlesetMessage(localDbDump, "error");
-    }
-
-    // Share what's happening with the user
-    handlesetWorking(
-      `Updating ${colourHighlight(DB_DATABASE)} on ${colourHighlight(
-        DB_SERVER
-      )}`
-    );
-    // Check if the user is running ddev, otherwise assume local database
-    if (localConfig && localConfig?.ddev === true) {
-      const importyDbtolocal = await doddevlocalDump(importFile);
-      if (!isEmpty(importyDbtolocal?.err)) {
-        return handlesetMessage(`${importyDbtolocal?.err}`, "error");
-      }
-    } else {
-      // Drop the tables from the local database
-      const dropTables = await doDropAllDbTables({
-        host: DB_SERVER,
-        port: DB_PORT,
-        user: DB_USER,
-        password: DB_PASSWORD,
-        database: DB_DATABASE,
-      });
-      // If there's any dropping issues then return the messages
-      if (dropTables instanceof Error)
-        return String(dropTables).includes("ER_BAD_DB_ERROR: Unknown database ")
-          ? handlesetMessage(
-              `First create a database named ${colourNotice(
-                DB_DATABASE
-              )} on ${colourNotice(
-                DB_SERVER
-              )} with these login details:\n\nUsername: ${DB_USER}\nPassword: ${DB_PASSWORD}`,
-              "error"
-            )
-          : handlesetMessage(
-              `There were issues connecting to your local ${colourAttention(
-                DB_DATABASE
-              )} database\n\nCheck these settings are correct in your local .env file:\n\n${colourAttention(
-                `DB_SERVER="${DB_SERVER}"\nDB_PORT="${DB_PORT}"\nDB_USER="${DB_USER}"\nDB_PASSWORD="${DB_PASSWORD}"\nDB_DATABASE="${DB_DATABASE}"`
-              )}\n\n${colourMuted(String(dropTables).replace("Error: ", ""))}`,
-              "error"
-            );
-      // Import the remote .sql into the local database
-      const importDatabase = await doImportDb({
-        host: DB_SERVER,
-        port: DB_PORT,
-        user: DB_USER,
-        password: DB_PASSWORD,
-        database: DB_DATABASE,
-        importFile: importFile,
-      });
-      // If there's any import issues then return the messages
-      if (importDatabase instanceof Error) {
-        return handlesetMessage(
-          `There were issues refreshing your local ${colourAttention(
-            DB_DATABASE
-          )} database\n\n${colourMuted(importDatabase)}`,
-          "error"
-        );
-      }
-      // Remove remote .sql working file
-      await cmdPromise(`rm ${importFile}`);
-    }
-    // Show a success message
-    return handlesetMessage(
-      `Your ${colourHighlight(
-        DB_DATABASE
-      )} database was updated with the ${colourHighlight(
-        remoteEnv.ENVIRONMENT
-      )} database`,
       "success"
     );
   },
@@ -469,6 +264,7 @@ const TaskFunctions = {
       );
     }
     const output = replaceRsyncOutput(pushStatus, stateconfig.pushFolders);
+    logger.info(pushStatus);
     return handlesetMessage(
       isEmpty(output)
         ? `No push required, ${
@@ -484,6 +280,223 @@ const TaskFunctions = {
       "success"
     );
   },
+  composerPull: async ({
+    stateconfig,
+    handlesetMessage,
+    stateremoteEnv,
+    statelocalEnv,
+    handlesetWorking,
+    isFlaggedStart,
+  }) => {
+    const { environment } = stateconfig;
+    const { user, host, appPath, port } = stateconfig.environments[`${environment}`]; // get Env
+    // Share what's happening with the user
+    handlesetWorking(`Backing up your local composer files`);
+    // Backup the local composer files this command fail silently if the user doesn’t have composer files locally just yet
+    await executeCommands(
+      `cp composer.json ${pathConfigs.pathBackups}/${statelocalEnv?.DB_DATABASE}-local-composer.json && cp composer.lock ${pathConfigs.pathBackups}/${statelocalEnv?.DB_DATABASE}-local-composer.lock`
+    );
+    // Connect to the remote server
+    const ssh = await getSshInit({
+      host: host,
+      user: user,
+      port: port,
+      sshKeyPath: statelocalEnv?.SWIFF_CUSTOM_KEY,
+    });
+    // If there's connection issues then return the messages
+    if (ssh instanceof Error) return handlesetMessage(`${ssh}`, "error");
+    // Share what's happening with the user
+    handlesetWorking(
+      `Fetching the composer files from the remote server at ${colourHighlight(
+        host
+      )}`
+    );
+    // Download composer.json from the remote server
+    const sshDownload1 = await getSshFile({
+      connection: ssh,
+      from: path.join(appPath, "composer.json"),
+      to: path.join(pathConfigs.pathApp, "composer.json"),
+    });
+    // If there's download issues then end the connection and return the messages
+    if (sshDownload1 instanceof Error) {
+      ssh.dispose();
+      return handlesetMessage(
+        `Error downloading composer.json\n\n${colourNotice(sshDownload1)}`,
+        "error"
+      );
+    }
+    // Download composer.lock from the remote server
+    const sshDownload2 = await getSshFile({
+      connection: ssh,
+      from: path.join(appPath, "composer.lock"),
+      to: path.join(pathConfigs.pathApp, "composer.lock"),
+    });
+    // If there's download issues then end the connection and return the messages
+    if (sshDownload2 instanceof Error) {
+      ssh.dispose();
+      return handlesetMessage(
+        `Error downloading composer.lock\n\n${colourNotice(sshDownload2)}`,
+        "error"
+      );
+    }
+    // Close the connection
+    ssh.dispose();
+    // Show a success message
+    return handlesetMessage(
+      `Your composer files were updated from ${colourHighlight(host)}`,
+      "success"
+    );
+  },
+  databasePull: async ({
+    stateconfig,
+    handlesetMessage,
+    stateremoteEnv,
+    statelocalEnv,
+    handlesetWorking,
+    isFlaggedStart,
+  }) => {
+    // Set some variables for later
+    const { defaultEnvironment } = stateconfig;
+    const { user, host, appPath, port } = stateconfig.environments[`${defaultEnvironment}`];
+    const serverConfig = stateconfig.environments[`${defaultEnvironment}`];
+    const localConfig = stateconfig?.local;
+    const {
+      SWIFF_CUSTOM_KEY,
+      DB_SERVER,
+      DB_PORT,
+      DB_DATABASE,
+      DB_USER,
+      DB_PASSWORD,
+    } = statelocalEnv;
+    // Get the remote env file via SSH
+    const remoteEnv = await getRemoteEnv({
+      serverConfig: serverConfig,
+      isInteractive: isFlaggedStart,
+      sshKeyPath: SWIFF_CUSTOM_KEY,
+    });
+    // If the env can't be found then return a message
+    if (remoteEnv instanceof Error){
+      logger.error(remoteEnv);
+      return handlesetMessage(remoteEnv)
+    };
+    // Share what's happening with the user
+    handlesetWorking(
+      `Fetching ${colourHighlight(
+        remoteEnv?.DB_DATABASE
+      )} from ${colourHighlight(remoteEnv?.ENVIRONMENT)}`
+    );
+    // Set the remote database variables
+    const remoteDbName = `${remoteEnv?.DB_DATABASE}-remote.sql`;
+    const remoteDbNameZipped = `${remoteDbName}.gz`;
+    const importFile = `${pathConfigs.pathBackups}/${remoteDbName}`;
+    // Download and store the remote DB via SSH
+    const dbSsh = await getSshDatabase({
+      remoteEnv: remoteEnv,
+      host: serverConfig.host,
+      user: serverConfig.user,
+      port: serverConfig.port,
+      sshAppPath: serverConfig.appPath,
+      gzipFileName: remoteDbNameZipped,
+      sshKeyPath: SWIFF_CUSTOM_KEY,
+      unzip: true,
+    });
+    // If there's any env issues then return the messages
+    if (dbSsh instanceof Error){
+      logger.error(dbSsh)
+      return handlesetMessage(dbSsh, "error")
+    };
+    // Backup the existing local database
+    const localBackupFilePath = `${pathConfigs.pathBackups}/${DB_DATABASE}-local.sql.gz`;
+    const localDbDump = await doLocalDbDump({
+      host: DB_SERVER,
+      port: DB_PORT,
+      user: DB_USER,
+      password: DB_PASSWORD,
+      database: DB_DATABASE,
+      gzipFilePath: localBackupFilePath,
+    });
+    // If there's any local db backup issues then return the messages
+    if (localDbDump instanceof Error) {
+      logger.error(localDbDump)
+      return handlesetMessage(localDbDump, "error");
+    }
+
+    // Share what's happening with the user
+    handlesetWorking(
+      `Updating ${colourHighlight(DB_DATABASE)} on ${colourHighlight(
+        DB_SERVER
+      )}`
+    );
+    // Check if the user is running ddev, otherwise assume local database
+    if (localConfig && localConfig?.ddev === true) {
+      const importyDbtolocal = await doddevlocalDump(importFile);
+      if (!isEmpty(importyDbtolocal?.err)) {
+        logger.error(importyDbtolocal?.err);
+        return handlesetMessage(`${importyDbtolocal?.err}`, "error");
+      }
+    } else {
+      // Drop the tables from the local database
+      const dropTables = await doDropAllDbTables({
+        host: DB_SERVER,
+        port: DB_PORT,
+        user: DB_USER,
+        password: DB_PASSWORD,
+        database: DB_DATABASE,
+      });
+      // If there's any dropping issues then return the messages
+      if (dropTables instanceof Error){
+        logger.error(dropTables)
+        return String(dropTables).includes("ER_BAD_DB_ERROR: Unknown database ")
+        ? handlesetMessage(
+            `First create a database named ${colourNotice(
+              DB_DATABASE
+            )} on ${colourNotice(
+              DB_SERVER
+            )} with these login details:\n\nUsername: ${DB_USER}\nPassword: ${DB_PASSWORD}`,
+            "error"
+          )
+        : handlesetMessage(
+            `There were issues connecting to your local ${colourAttention(
+              DB_DATABASE
+            )} database\n\nCheck these settings are correct in your local .env file:\n\n${colourAttention(
+              `DB_SERVER="${DB_SERVER}"\nDB_PORT="${DB_PORT}"\nDB_USER="${DB_USER}"\nDB_PASSWORD="${DB_PASSWORD}"\nDB_DATABASE="${DB_DATABASE}"`
+            )}\n\n${colourMuted(String(dropTables).replace("Error: ", ""))}`,
+            "error"
+          );
+      }
+      // Import the remote .sql into the local database
+      const importDatabase = await doImportDb({
+        host: DB_SERVER,
+        port: DB_PORT,
+        user: DB_USER,
+        password: DB_PASSWORD,
+        database: DB_DATABASE,
+        importFile: importFile,
+      });
+      // If there's any import issues then return the messages
+      if (importDatabase instanceof Error) {
+        logger.error(importDatabase);
+        return handlesetMessage(
+          `There were issues refreshing your local ${colourAttention(
+            DB_DATABASE
+          )} database\n\n${colourMuted(importDatabase)}`,
+          "error"
+        );
+      }
+      // Remove remote .sql working file
+      await cmdPromise(`rm ${importFile}`);
+    }
+    // Show a success message
+    return handlesetMessage(
+      `Your ${colourHighlight(
+        DB_DATABASE
+      )} database was updated with the ${colourHighlight(
+        remoteEnv.ENVIRONMENT
+      )} database`,
+      "success"
+    );
+  },
+
 };
 
 const Tasks = ({ stateconfig, setConfig, isDisabled }) => {

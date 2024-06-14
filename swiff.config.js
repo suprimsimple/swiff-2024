@@ -7,6 +7,9 @@
 export default {
   // Default Environment  staging, production
   defaultEnvironment: "staging",
+  logging:{
+    enabled: true,  
+  },
   environments: {
     staging: {
       // The SSH login username

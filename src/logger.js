@@ -1,22 +1,43 @@
 import pino from "pino";
 import pretty from 'pino-pretty';
-import { createWriteStream } from "node:fs";
+import { createWriteStream, existsSync, mkdir } from "node:fs";
 import path from "node:path";
 import { appDirectory } from "./utils";
-const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
-// const logFile = pino.destination();
-const logFilePath =resolveApp('swiff.log');
-const logStream = createWriteStream(logFilePath, { flags: 'a' });
-const logger = pino({
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      destination: logFilePath,
-      mkdir: true,   
-      colorize: false,  
+import { getConfig } from "./config";
+
+const initializeLogger = async ()=>{
+  const config = await getConfig();
+  if (!config) {
+      return
+  }
+  const resolveApp = (relativePath) => path.resolve(appDirectory,  relativePath);
+  // const logFile = pino.destination();
+  if(!existsSync(`${config?.logging?.target}`)){
+    if(config?.logging?.target){
+        mkdir(resolveApp(`${config?.logging?.target ?? "./"}`), (err) => {
+            if (err) {
+               process.exitCode(1);
+            }
+        });
+    }
+  };
+  const logFilePath = resolveApp(`${config?.logging?.target ?? "./"}swiff.log`);
+  const logStream = createWriteStream(logFilePath, { flags: 'a' });
+  const logger = pino({
+    transport: {
+        target: 'pino-pretty',
+        options: {
+            destination: logFilePath,
+            mkdir: true,   
+            colorize: false, 
+        },
     },
-    level: 'info',   
-  },
+    enabled: config?.logging?.enabled ?? true
 }, logStream);
+
+return logger;
+}
+
+const logger = await initializeLogger();
 
 export default logger;
