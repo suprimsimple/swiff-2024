@@ -6,7 +6,6 @@ import { exec } from "node:child_process";
 import timersPromises from "timers-promises";
 import { username as resolveUsername } from "username";
 import path from "node:path";
-import logger from "../logger.js";
 import {
   cmdPromise,
   commaAmpersander,
@@ -67,6 +66,7 @@ const TaskFunctions = {
     statelocalEnv,
     handlesetWorking,
     isFlaggedStart,
+logger
   }) => {
     const { pullFolders, defaultEnvironment } = stateconfig;
     const { user, host, appPath, port } = stateconfig.environments[`${defaultEnvironment}`]; // get Env
@@ -167,6 +167,7 @@ const TaskFunctions = {
     statelocalEnv,
     handlesetWorking,
     isFlaggedStart,
+    logger
   }) => {
     // Set some variables for later
     const { defaultEnvironment, pushFolders } = stateconfig;
@@ -287,6 +288,7 @@ const TaskFunctions = {
     statelocalEnv,
     handlesetWorking,
     isFlaggedStart,
+logger
   }) => {
     const { environment } = stateconfig;
     const { user, host, appPath, port } = stateconfig.environments[`${environment}`]; // get Env
@@ -354,6 +356,7 @@ const TaskFunctions = {
     statelocalEnv,
     handlesetWorking,
     isFlaggedStart,
+    logger
   }) => {
     // Set some variables for later
     const { defaultEnvironment } = stateconfig;
@@ -496,10 +499,9 @@ const TaskFunctions = {
       "success"
     );
   },
-
 };
 
-const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
+const Tasks = ({ stateconfig, setConfig, isDisabled, logger }) => {
   const [messages, setMessages] = React.useState([]);
   const [playSound, setPlaySound] = React.useState(false);
   const [statelocalEnv, setstatelocalEnv] = React.useState(null);
@@ -665,6 +667,7 @@ const Tasks = ({ stateconfig, setConfig, isDisabled }) => {
         isFlaggedStart,
         handlesetMessage,
         handlesetWorking,
+        logger
       });
       // End the process after 500 ticks if started with flags
       return handleEndTask();

@@ -38,12 +38,7 @@ You can specify a custom SSH key path in your .env file with:<br>
 This plugin requires an LTS Node version (v16.0.0+).
 filename: ```swiff.config.js``` add to root of your application.
 ```js
-/**
- * Swiff Project Configuration
- * Head to 'https://github.com/simple-integrated-marketing/swiff' for further information.
- */
-// Remote SSH server details
-export default {
+{
   // set Default Environment  | staging or production
   defaultEnvironment: "staging",
   logging:{
@@ -100,3 +95,7 @@ Created by [@benrogerson](https://twitter.com/benrogerson) and Sam Stevens
 Updated & Maintained by [@suprim12](https://suprimgolay.com.np/) 
 
 Swiff has been agency battletested by [Simple](https://simple.com.au) who specialise in Craft CMS websites
+
+
+    // "build:cjs": "rollup build/index.js --file build/bundle.js --format cjs --plugins @rollup/plugin-commonjs",
+    // "build": "npm run build:module && npm run build:cjs",

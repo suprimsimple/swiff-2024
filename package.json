@@ -1,6 +1,6 @@
 {
   "name": "swiff-4",
-  "version": "5.0.2",
+  "version": "5.0.8",
   "main": "build/index.js",
   "type": "module",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
@@ -21,6 +21,7 @@
     "start": "node build/index.js",
     "compile": "rm -rf dist && babel src --out-dir dist/index.js",
     "compile-bundle": "rollup -c",
+    "build:module": "npm run compile-bundle",
     "build": "npm run compile-bundle",
     "postbuild": "node build/index.js",
     "prebuild": "rm -rf build",

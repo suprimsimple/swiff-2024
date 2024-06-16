@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import chalk from "chalk";
 import SelectInput from "ink-select-input";
-import updateNotifier from "update-notifier";
 import { hexHighlight } from "./colors.js";
 import { doesFileExist } from "./utils.js";
 import { lt } from "semver";
@@ -13,22 +12,25 @@ import IntroText from "./components/IntroText.js";
 import Tasks from "./components/Tasks.js";
 import ItemComponent from "./components/ItemComponent.js";
 import { createRequire } from "node:module";
+import updateNotifier from "update-notifier";
+import { initializeLogger } from "./logger.js";
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
 // Start with a blank slate
 console.clear();
 
 // Check Version
-if (lt(process.version, "16.19.0")) {
-  cli.showUsage();
+if (lt(process.version, "15.14.0")) {
+  console.log(chalk.green(`Node Version: ${process.version}`))
   console.log(
     chalk.red(
       "unsupported node version, please use a version equal or greater than " +
-        "16.19.0"
+        "15.14.0"
     )
   );
-  process.exit(0);
+  process.exit();
 }
+
 
 // package update
 updateNotifier({ pkg: pkg }).notify();
@@ -37,6 +39,7 @@ const App = () => {
   const [envOptions, setEnvOptions] = useState([]);
   const [stateconfig, setConfig] = useState(null);
   const [selectedEnv, setselectedEnv] = useState(false);
+  const [statelogger, setStatelogger] = useState(null);
   const isDisabled = (taskId) =>
     stateconfig &&
     stateconfig?.disabled &&
@@ -57,6 +60,8 @@ const App = () => {
   useEffect(() => {
     (async () => {
       try {
+        const logger = await initializeLogger();
+        setStatelogger(logger);
         const doesConfigExist = await doesFileExist(pathConfigs.pathConfig);
         if (!doesConfigExist) {
           await createConfig();
@@ -122,6 +127,7 @@ const App = () => {
           stateconfig={stateconfig}
           setConfig={(config) => setConfig(config)}
           isDisabled={isDisabled}
+          logger={statelogger}
         />
       )}
     </>

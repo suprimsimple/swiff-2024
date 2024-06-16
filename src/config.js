@@ -8,7 +8,8 @@ const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
 
 
-export const configFileName =   pkg.type === 'module' ? 'swiff.config.js' : 'swiff.config.cjs';
+export const configFileName =  'swiff.config.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

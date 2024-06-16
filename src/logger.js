@@ -46,6 +46,6 @@ const initializeLogger = async ()=>{
 return logger;
 }
 
-const logger = await initializeLogger();
 
-export default logger;
+
+export  {initializeLogger}
