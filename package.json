@@ -73,7 +73,7 @@
     "username": "^7.0.0"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=15"
   },
   "browserslist": "> 0.25%, not dead"
 }
