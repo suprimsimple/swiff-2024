@@ -24,15 +24,13 @@ type Actions  = "databasePush" | "foldersPush";
 type defaultEnvironment  = "staging" | "production";
 
 
-declare module "swiff-4" {
-    export interface Config {
-        defaultEnvironment: defaultEnvironment;
-        logging: LoggingConfig;
-        environments: Environments;
-        local: LocalConfig;
-        pushFolders: Array<string | Object>;
-        pullFolders: Array<string>;
-        disabled: Actions[];
-    }
+export interface Config {
+    defaultEnvironment: defaultEnvironment;
+    logging: LoggingConfig;
+    environments: Environments;
+    local: LocalConfig;
+    pushFolders: Array<string | Object>;
+    pullFolders: Array<string>;
+    disabled: Actions[];
 }
 
