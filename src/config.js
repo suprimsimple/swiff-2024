@@ -28,7 +28,9 @@ export const pathConfigs = {
 const createConfig = (
   fromPath = pathConfigs.pathConfigTemplate,
   toPath = pathConfigs.pathConfig
-) => fs.copy(fromPath, toPath);
+) => {
+  fs.copy(fromPath, toPath);
+};
 
 const setupConfig = async (hasNewConfig, isInteractive) => {
   // Get config contents

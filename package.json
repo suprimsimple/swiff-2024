@@ -1,7 +1,8 @@
 {
   "name": "swiff-4",
-  "version": "5.0.8",
+  "version": "6.0.3",
   "main": "build/index.js",
+  "types": "types/swiff-4.d.ts",
   "type": "module",
   "description": "Swiff saves you time with common SSH tasks during the development of websites/apps",
   "devDependencies": {
@@ -43,6 +44,8 @@
     "swiff-4": "build/index.js"
   },
   "files": [
+    "tsconfig.json",
+    "swiff-4.d.ts",
     "build/*",
     "backups/*",
     "resources/*",
